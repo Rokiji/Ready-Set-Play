@@ -1,68 +1,84 @@
 
-// Sample music data with URLs to free music tracks
+// Sample music data with Spotify tracks
 export const songsData = [
   {
     id: "song1",
-    title: "Epic Adventure",
-    artist: "Game Tracks",
-    genre: "Epic",
-    duration: "3:45",
-    url: "https://cdn.freesound.org/previews/573/573577_5674468-lq.mp3" // Free music from Freesound
+    title: "Another One Bites The Dust",
+    artist: "Queen",
+    genre: "Rock",
+    duration: "3:36",
+    url: "https://open.spotify.com/embed/track/5vdp5UmvTsnMEMESIF2Ym7",
+    spotifyId: "5vdp5UmvTsnMEMESIF2Ym7"
   },
   {
     id: "song2",
-    title: "Pixel Dreams",
-    artist: "Chiptune Master",
-    genre: "Chiptune",
-    duration: "2:18",
-    url: "https://cdn.freesound.org/previews/452/452641_9311450-lq.mp3" // Free music from Freesound
+    title: "Billie Jean",
+    artist: "Michael Jackson",
+    genre: "Pop",
+    duration: "4:54",
+    url: "https://open.spotify.com/embed/track/5ChkMS8OtdzJeqyybCc9R5",
+    spotifyId: "5ChkMS8OtdzJeqyybCc9R5"
   },
   {
     id: "song3",
-    title: "Battle Ready",
-    artist: "Action Beats",
-    genre: "Action",
-    duration: "4:32",
-    url: "https://cdn.freesound.org/previews/612/612095_5674468-lq.mp3" // Free music from Freesound
+    title: "Sweet Child O' Mine",
+    artist: "Guns N' Roses",
+    genre: "Rock",
+    duration: "5:56",
+    url: "https://open.spotify.com/embed/track/7o2CTH4ctstm8TNelqjb51",
+    spotifyId: "7o2CTH4ctstm8TNelqjb51"
   },
   {
     id: "song4",
-    title: "Relaxing Moment",
-    artist: "Ambient Sounds",
-    genre: "Ambient",
-    duration: "5:21",
-    url: "https://cdn.freesound.org/previews/617/617308_1648170-lq.mp3" // Free music from Freesound
+    title: "Hotel California",
+    artist: "Eagles",
+    genre: "Rock",
+    duration: "6:30",
+    url: "https://open.spotify.com/embed/track/40riOy7x9W7GXjyGp4pjAv",
+    spotifyId: "40riOy7x9W7GXjyGp4pjAv"
   },
   {
     id: "song5",
-    title: "Racing Pulse",
-    artist: "Speed Tracks",
-    genre: "Electronic",
-    duration: "3:07",
-    url: "https://cdn.freesound.org/previews/350/350986_6237064-lq.mp3" // Free music from Freesound
+    title: "Bohemian Rhapsody",
+    artist: "Queen",
+    genre: "Rock",
+    duration: "5:55",
+    url: "https://open.spotify.com/embed/track/7tFiyTwD0nx5a1eklYtX2J",
+    spotifyId: "7tFiyTwD0nx5a1eklYtX2J"
   },
   {
     id: "song6",
-    title: "Mystery Solver",
-    artist: "Puzzle Music",
-    genre: "Mysterious",
-    duration: "4:15",
-    url: "https://cdn.freesound.org/previews/632/632108_13279872-lq.mp3" // Free music from Freesound
+    title: "Beat It",
+    artist: "Michael Jackson",
+    genre: "Pop",
+    duration: "4:18",
+    url: "https://open.spotify.com/embed/track/1OOtq8tRnDM8kG2gqUPjAj",
+    spotifyId: "1OOtq8tRnDM8kG2gqUPjAj"
   },
   {
     id: "song7",
-    title: "Victory Fanfare",
-    artist: "Win Sounds",
-    genre: "Celebration",
-    duration: "1:45",
-    url: "https://cdn.freesound.org/previews/613/613536_11861866-lq.mp3" // Free music from Freesound
+    title: "Smells Like Teen Spirit",
+    artist: "Nirvana",
+    genre: "Rock",
+    duration: "5:01",
+    url: "https://open.spotify.com/embed/track/5sICkBXVmaCQk5aISGR3x1",
+    spotifyId: "5sICkBXVmaCQk5aISGR3x1"
   },
   {
     id: "song8",
-    title: "Space Journey",
-    artist: "Cosmic Waves",
-    genre: "Sci-Fi",
-    duration: "6:23",
-    url: "https://cdn.freesound.org/previews/560/560439_12295155-lq.mp3" // Free music from Freesound
+    title: "Thriller",
+    artist: "Michael Jackson",
+    genre: "Pop",
+    duration: "5:57",
+    url: "https://open.spotify.com/embed/track/3S2R0EVwBSAVMd5UMgKTL0",
+    spotifyId: "3S2R0EVwBSAVMd5UMgKTL0"
   }
 ];
+
+// Spotify playlist information
+export const spotifyPlaylistData = {
+  id: "37i9dQZF1DXcBWIGoYBM5M",
+  name: "Today's Top Hits",
+  description: "The most popular tracks right now",
+  imageUrl: "https://i.scdn.co/image/ab67706f000000034a2c6ea7db921f610913e787"
+};

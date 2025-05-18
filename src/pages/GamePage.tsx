@@ -4,6 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import MusicPlayer from '@/components/MusicPlayer';
 import CatchGame from '@/components/games/CatchGame';
+import GameCard from '@/components/GameCard';
 import { Button } from '@/components/ui/button';
 import { gamesData } from '@/data/gamesData';
 import { ArrowLeft } from 'lucide-react';

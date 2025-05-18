@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import MusicPlayer from '@/components/MusicPlayer';
 import { Button } from '@/components/ui/button';
 import { songsData } from '@/data/musicData';
 import { Play, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 const MusicPage = () => {
   // Function to handle play button click on a song
@@ -17,6 +18,9 @@ const MusicPage = () => {
       localStorage.setItem('current_song_index', songIndex.toString());
       // Dispatch a custom event for MusicPlayer to pick up
       window.dispatchEvent(new CustomEvent('play-song', { detail: { songIndex } }));
+      toast(`Now playing ${songsData[songIndex].title}`, {
+        description: `by ${songsData[songIndex].artist}`
+      });
     }
   };
 

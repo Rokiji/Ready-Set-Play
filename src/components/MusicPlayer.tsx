@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
 import { songsData } from '@/data/musicData';
+import { toast } from "sonner";
 
 const MusicPlayer: React.FC = () => {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -19,31 +20,94 @@ const MusicPlayer: React.FC = () => {
   const currentTrack = songsData[currentTrackIndex];
 
   useEffect(() => {
-    // Initialize audio element
+    // Check localStorage for previously selected song
+    const storedSongIndex = localStorage.getItem('current_song_index');
+    if (storedSongIndex) {
+      const parsedIndex = parseInt(storedSongIndex, 10);
+      if (!isNaN(parsedIndex) && parsedIndex >= 0 && parsedIndex < songsData.length) {
+        setCurrentTrackIndex(parsedIndex);
+      }
+    }
+
+    // Create audio element
     const audio = new Audio();
     audioRef.current = audio;
-    
-    // Set initial source
-    if (currentTrack) {
-      audio.src = currentTrack.url || ''; // Fallback to empty string if url is missing
-    }
-    
-    // Set initial volume
-    audio.volume = volume / 100;
     
     // Setup event listeners
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('ended', handleTrackEnded);
+    audio.addEventListener('error', handleAudioError);
     
-    // Cleanup function to remove event listeners
+    // Listen for custom event to play a specific song
+    window.addEventListener('play-song', handlePlaySongEvent);
+    
+    // Cleanup function
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('ended', handleTrackEnded);
-      audio.pause();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
+        audioRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        audioRef.current.removeEventListener('ended', handleTrackEnded);
+        audioRef.current.removeEventListener('error', handleAudioError);
+      }
+      window.removeEventListener('play-song', handlePlaySongEvent);
     };
-  }, [currentTrackIndex]);
+  }, []);
+  
+  // Update audio source when currentTrackIndex changes
+  useEffect(() => {
+    if (audioRef.current && currentTrack) {
+      // Save track to localStorage
+      localStorage.setItem('current_song_index', currentTrackIndex.toString());
+      
+      // Check if audio is already playing
+      const wasPlaying = !audioRef.current.paused;
+      
+      // Update source
+      audioRef.current.src = currentTrack.url;
+      audioRef.current.load();
+      
+      // Set volume
+      audioRef.current.volume = isMuted ? 0 : volume / 100;
+      
+      // Play if it was already playing
+      if (wasPlaying) {
+        playTrack();
+      }
+    }
+  }, [currentTrackIndex, currentTrack]);
+  
+  // Handle custom play-song event
+  const handlePlaySongEvent = (event: Event) => {
+    const customEvent = event as CustomEvent;
+    if (customEvent.detail && typeof customEvent.detail.songIndex === 'number') {
+      setCurrentTrackIndex(customEvent.detail.songIndex);
+      setTimeout(playTrack, 100);
+    }
+  };
+  
+  // Play current track
+  const playTrack = () => {
+    if (audioRef.current) {
+      audioRef.current.play()
+        .then(() => {
+          setIsPlaying(true);
+        })
+        .catch(error => {
+          console.error("Error playing audio:", error);
+          toast.error("Couldn't play audio. Please try another track.");
+          setIsPlaying(false);
+        });
+    }
+  };
+  
+  // Handle audio errors
+  const handleAudioError = (e: ErrorEvent) => {
+    console.error("Audio error:", e);
+    toast.error("There was a problem playing this track. Please try another one.");
+    setIsPlaying(false);
+  };
   
   // Handle time update event
   const handleTimeUpdate = () => {
@@ -66,6 +130,7 @@ const MusicPlayer: React.FC = () => {
   
   // Format time in minutes:seconds
   const formatTime = (time: number) => {
+    if (isNaN(time)) return "0:00";
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
@@ -77,49 +142,22 @@ const MusicPlayer: React.FC = () => {
     
     if (isPlaying) {
       audioRef.current.pause();
+      setIsPlaying(false);
     } else {
-      audioRef.current.play().catch(error => {
-        console.error("Error playing audio:", error);
-      });
+      playTrack();
     }
-    
-    setIsPlaying(!isPlaying);
   };
   
   // Next track
   const nextTrack = () => {
     const newIndex = (currentTrackIndex + 1) % songsData.length;
     setCurrentTrackIndex(newIndex);
-    setIsPlaying(false); // Reset playing state
-    
-    // We'll set isPlaying to true after a short timeout to ensure the new audio loads
-    setTimeout(() => {
-      if (audioRef.current) {
-        audioRef.current.play().then(() => {
-          setIsPlaying(true);
-        }).catch(error => {
-          console.error("Error playing next track:", error);
-        });
-      }
-    }, 100);
   };
   
   // Previous track
   const previousTrack = () => {
     const newIndex = (currentTrackIndex - 1 + songsData.length) % songsData.length;
     setCurrentTrackIndex(newIndex);
-    setIsPlaying(false); // Reset playing state
-    
-    // We'll set isPlaying to true after a short timeout to ensure the new audio loads
-    setTimeout(() => {
-      if (audioRef.current) {
-        audioRef.current.play().then(() => {
-          setIsPlaying(true);
-        }).catch(error => {
-          console.error("Error playing previous track:", error);
-        });
-      }
-    }, 100);
   };
   
   // Handle volume change
@@ -128,7 +166,7 @@ const MusicPlayer: React.FC = () => {
     
     const newVolume = value[0];
     setVolume(newVolume);
-    audioRef.current.volume = newVolume / 100;
+    audioRef.current.volume = isMuted ? 0 : newVolume / 100;
     
     if (isMuted && newVolume > 0) {
       setIsMuted(false);

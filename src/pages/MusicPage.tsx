@@ -7,6 +7,19 @@ import { songsData } from '@/data/musicData';
 import { Play, Plus } from 'lucide-react';
 
 const MusicPage = () => {
+  // Function to handle play button click on a song
+  const handlePlaySong = (songId: string) => {
+    // Find index of song in songsData
+    const songIndex = songsData.findIndex(song => song.id === songId);
+    
+    // Store selected song index in localStorage to be used by MusicPlayer
+    if (songIndex !== -1) {
+      localStorage.setItem('current_song_index', songIndex.toString());
+      // Dispatch a custom event for MusicPlayer to pick up
+      window.dispatchEvent(new CustomEvent('play-song', { detail: { songIndex } }));
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -43,7 +56,12 @@ const MusicPage = () => {
                   <td className="py-4 px-6 text-gray-600 hidden sm:table-cell">{song.duration}</td>
                   <td className="py-4 px-6">
                     <div className="flex gap-2">
-                      <Button size="icon" variant="ghost" className="h-8 w-8">
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-8 w-8"
+                        onClick={() => handlePlaySong(song.id)}
+                      >
                         <Play size={16} />
                       </Button>
                       <Button size="icon" variant="ghost" className="h-8 w-8">

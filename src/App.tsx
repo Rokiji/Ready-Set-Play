@@ -9,7 +9,6 @@ import GamesPage from "./pages/GamesPage";
 import GamePage from "./pages/GamePage";
 import MusicPage from "./pages/MusicPage";
 import AboutPage from "./pages/AboutPage";
-import SpotifyCallback from "./pages/SpotifyCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,7 +25,6 @@ const App = () => (
           <Route path="/game/:gameId" element={<GamePage />} />
           <Route path="/music" element={<MusicPage />} />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/callback" element={<SpotifyCallback />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

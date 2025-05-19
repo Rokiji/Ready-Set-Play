@@ -82,7 +82,7 @@ const TicTacToe = () => {
     return (
       <button 
         className={`w-20 h-20 text-2xl font-bold flex items-center justify-center 
-          ${board[i] ? (board[i] === 'X' ? 'text-violet-400' : 'text-purple-300') : 'text-transparent'}
+          ${board[i] ? (board[i] === 'X' ? 'text-white' : 'text-white') : 'text-transparent'}
           ${isWinningSquare ? 'bg-violet-900/50 animate-pulse' : 'bg-gray-800/60'}
           border border-violet-700/40 transition-all duration-200 hover:bg-violet-900/30`}
         onClick={() => handleClick(i)}
@@ -104,10 +104,10 @@ const TicTacToe = () => {
 
   return (
     <div className="flex flex-col items-center bg-gradient-to-br from-gray-900 to-violet-900 rounded-lg p-8 shadow-lg">
-      <h2 className="text-3xl font-bold mb-6 text-gradient-violet">Tic Tac Toe</h2>
+      <h2 className="text-3xl font-bold mb-6 text-white">Tic Tac Toe</h2>
       
       <div className="mb-6">
-        <div className="status text-xl font-medium mb-4 text-violet-300">{status}</div>
+        <div className="status text-xl font-medium mb-4 text-white">{status}</div>
         <div className="grid grid-cols-3 gap-1">
           {[...Array(9)].map((_, i) => (
             <div key={i}>{renderSquare(i)}</div>
@@ -122,7 +122,7 @@ const TicTacToe = () => {
         New Game
       </Button>
       
-      <div className="mt-6 text-violet-300 text-center">
+      <div className="mt-6 text-white text-center">
         <h3 className="font-medium mb-2">How to Play:</h3>
         <p>You are X, computer is O.</p>
         <p>Take turns placing your marks.</p>

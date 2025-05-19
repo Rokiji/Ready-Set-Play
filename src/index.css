@@ -82,6 +82,6 @@
   }
   
   .text-gradient-violet {
-    @apply bg-gradient-to-r from-violet-400 to-purple-300 bg-clip-text text-transparent;
+    @apply text-white;
   }
 }

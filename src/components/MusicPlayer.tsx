@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -96,6 +95,7 @@ const MusicPlayer: React.FC = () => {
     if (customEvent.detail && typeof customEvent.detail.songIndex === 'number') {
       setCurrentTrackIndex(customEvent.detail.songIndex);
       // Auto-play the selected song immediately
+      setIsPlaying(true);
       setTimeout(() => {
         playTrack();
       }, 100);
@@ -143,38 +143,38 @@ const MusicPlayer: React.FC = () => {
   };
   
   // Handle audio errors
-  const handleAudioError = (e: ErrorEvent) => {
+  function handleAudioError(e: ErrorEvent) {
     console.error("Audio error:", e);
     toast.error("There was a problem playing this track. Please try another one.");
     setIsPlaying(false);
-  };
+  }
   
   // Handle time update event
-  const handleTimeUpdate = () => {
+  function handleTimeUpdate() {
     if (audioRef.current) {
       setCurrentTime(audioRef.current.currentTime);
     }
-  };
+  }
   
   // Handle loaded metadata event
-  const handleLoadedMetadata = () => {
+  function handleLoadedMetadata() {
     if (audioRef.current) {
       setDuration(audioRef.current.duration);
     }
-  };
+  }
   
   // Handle track ended event
-  const handleTrackEnded = () => {
+  function handleTrackEnded() {
     nextTrack();
-  };
+  }
   
   // Format time in minutes:seconds
-  const formatTime = (time: number) => {
+  function formatTime(time: number) {
     if (isNaN(time)) return "0:00";
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  };
+  }
   
   // Toggle play/pause
   const togglePlay = () => {
@@ -196,19 +196,19 @@ const MusicPlayer: React.FC = () => {
   };
   
   // Next track
-  const nextTrack = () => {
+  function nextTrack() {
     const newIndex = (currentTrackIndex + 1) % songsData.length;
     setCurrentTrackIndex(newIndex);
-  };
+  }
   
   // Previous track
-  const previousTrack = () => {
+  function previousTrack() {
     const newIndex = (currentTrackIndex - 1 + songsData.length) % songsData.length;
     setCurrentTrackIndex(newIndex);
-  };
+  }
   
   // Handle volume change
-  const handleVolumeChange = (value: number[]) => {
+  function handleVolumeChange(value: number[]) {
     if (!audioRef.current) return;
     
     const newVolume = value[0];
@@ -218,25 +218,25 @@ const MusicPlayer: React.FC = () => {
     if (isMuted && newVolume > 0) {
       setIsMuted(false);
     }
-  };
+  }
   
   // Handle seek change
-  const handleSeekChange = (value: number[]) => {
+  function handleSeekChange(value: number[]) {
     if (!audioRef.current || isSpotifyTrack) return;
     
     const seekTime = value[0];
     audioRef.current.currentTime = seekTime;
     setCurrentTime(seekTime);
-  };
+  }
   
   // Toggle mute
-  const toggleMute = () => {
+  function toggleMute() {
     if (!audioRef.current) return;
     
     const newMuteState = !isMuted;
     setIsMuted(newMuteState);
     audioRef.current.volume = newMuteState ? 0 : volume / 100;
-  };
+  }
 
   return (
     <div className="music-player bg-gray-900/90 text-white py-4">
@@ -264,7 +264,7 @@ const MusicPlayer: React.FC = () => {
               aria-label="Previous song"
               onClick={previousTrack}
             >
-              <SkipBack size={20} className="text-violet-300" />
+              <SkipBack size={20} className="text-white" />
             </button>
             
             <button 
@@ -280,20 +280,20 @@ const MusicPlayer: React.FC = () => {
               aria-label="Next song"
               onClick={nextTrack}
             >
-              <SkipForward size={20} className="text-violet-300" />
+              <SkipForward size={20} className="text-white" />
             </button>
           </div>
           
           <div className="hidden md:block flex-1 px-8">
             <div className="flex flex-col items-center">
               <div className="text-center mb-1">
-                <span className="font-medium text-violet-200">
+                <span className="font-medium text-white">
                   {currentTrack ? currentTrack.title : 'No track selected'}
                 </span>
                 {currentTrack && (
                   <>
-                    <span className="mx-1 text-violet-400">•</span>
-                    <span className="text-violet-400">
+                    <span className="mx-1 text-white/80">•</span>
+                    <span className="text-white/80">
                       {currentTrack.artist}
                     </span>
                   </>
@@ -301,7 +301,7 @@ const MusicPlayer: React.FC = () => {
               </div>
               {!isSpotifyTrack && (
                 <div className="w-full flex items-center gap-2">
-                  <span className="text-xs text-violet-400 w-10 text-right">
+                  <span className="text-xs text-white/80 w-10 text-right">
                     {formatTime(currentTime)}
                   </span>
                   <Slider
@@ -311,7 +311,7 @@ const MusicPlayer: React.FC = () => {
                     onValueChange={handleSeekChange}
                     className="w-full"
                   />
-                  <span className="text-xs text-violet-400 w-10">
+                  <span className="text-xs text-white/80 w-10">
                     {formatTime(duration)}
                   </span>
                 </div>
@@ -326,7 +326,7 @@ const MusicPlayer: React.FC = () => {
                 onClick={toggleMute} 
                 aria-label={isMuted ? "Unmute" : "Mute"}
               >
-                {isMuted ? <VolumeX size={20} className="text-violet-300" /> : <Volume2 size={20} className="text-violet-300" />}
+                {isMuted ? <VolumeX size={20} className="text-white" /> : <Volume2 size={20} className="text-white" />}
               </button>
               
               <div className="hidden md:block w-28">

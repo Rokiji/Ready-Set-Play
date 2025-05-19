@@ -4,6 +4,11 @@ import { useParams, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import MusicPlayer from '@/components/MusicPlayer';
 import CatchGame from '@/components/games/CatchGame';
+import PuzzleMasters from '@/components/games/PuzzleMasters';
+import SpaceShooter from '@/components/games/SpaceShooter';
+import RacingFever from '@/components/games/RacingFever';
+import WordWizard from '@/components/games/WordWizard';
+import MemoryMatch from '@/components/games/MemoryMatch';
 import GameCard from '@/components/GameCard';
 import { Button } from '@/components/ui/button';
 import { gamesData } from '@/data/gamesData';
@@ -35,11 +40,21 @@ const GamePage = () => {
     switch (game.component) {
       case 'CatchGame':
         return <CatchGame />;
+      case 'PuzzleMasters':
+        return <PuzzleMasters />;
+      case 'SpaceShooter':
+        return <SpaceShooter />;
+      case 'RacingFever':
+        return <RacingFever />;
+      case 'WordWizard':
+        return <WordWizard />;
+      case 'MemoryMatch':
+        return <MemoryMatch />;
       default:
         return (
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+          <div className="bg-card rounded-xl shadow-lg p-8 text-center">
             <h2 className="text-2xl font-bold mb-4">{game.title}</h2>
-            <p className="mb-6 text-gray-600">{game.description}</p>
+            <p className="mb-6 text-muted-foreground">{game.description}</p>
             <div className="rounded-lg overflow-hidden mb-6">
               <img src={game.imageUrl} alt={game.title} className="w-full h-64 object-cover" />
             </div>
@@ -50,7 +65,7 @@ const GamePage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       
       <main className="container mx-auto px-6 py-12 flex-grow">

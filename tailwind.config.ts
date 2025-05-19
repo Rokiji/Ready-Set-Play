@@ -64,12 +64,12 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				game: {
-					primary: '#6E59A5',
-					secondary: '#D946EF',
-					accent: '#F97316',
-					background: '#1A1F2C',
-					foreground: '#FFFFFF',
-					muted: '#E5DEFF',
+					primary: '#9370DB', // Lighter purple
+					secondary: '#FF69B4', // Hot pink
+					accent: '#FFD700', // Gold
+					background: '#1F2937', // Dark slate
+					foreground: '#FFFFFF', // White
+					muted: '#E5DEFF', // Light purple/lavender
 				}
 			},
 			borderRadius: {

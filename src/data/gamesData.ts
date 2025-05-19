@@ -56,5 +56,21 @@ export const gamesData: Game[] = [
     imageUrl: "https://images.unsplash.com/photo-1606167668584-78701c57f13d?q=80&w=2670&auto=format&fit=crop",
     genre: "Memory",
     component: "MemoryMatch"
+  },
+  {
+    id: "arcade-racer",
+    title: "Arcade Racer",
+    description: "Navigate your car through traffic and obstacles in this retro racing game.",
+    imageUrl: "https://images.unsplash.com/photo-1560253023-3ec5d502959f?q=80&w=2670&auto=format&fit=crop",
+    genre: "Arcade",
+    component: "ArcadeRacer"
+  },
+  {
+    id: "tic-tac-toe",
+    title: "Tic Tac Toe",
+    description: "Classic game of X's and O's. Challenge the computer in this strategic battle.",
+    imageUrl: "https://images.unsplash.com/photo-1611032065923-dd392afe6b96?q=80&w=2670&auto=format&fit=crop",
+    genre: "Strategy",
+    component: "TicTacToe"
   }
 ];

@@ -12,8 +12,8 @@ const GamesPage = () => {
       
       <main className="container mx-auto px-6 py-12 flex-grow">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Game Library</h1>
-          <p className="text-gray-600">Choose from our collection of mini-games</p>
+          <h1 className="text-3xl font-bold mb-2 text-gradient-violet">Game Library</h1>
+          <p className="text-violet-300">Choose from our collection of mini-games</p>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

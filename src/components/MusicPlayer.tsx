@@ -95,7 +95,10 @@ const MusicPlayer: React.FC = () => {
     const customEvent = event as CustomEvent;
     if (customEvent.detail && typeof customEvent.detail.songIndex === 'number') {
       setCurrentTrackIndex(customEvent.detail.songIndex);
-      setTimeout(playTrack, 100);
+      // Auto-play the selected song immediately
+      setTimeout(() => {
+        playTrack();
+      }, 100);
     }
   };
   
@@ -107,6 +110,22 @@ const MusicPlayer: React.FC = () => {
         description: `This track plays in the Spotify iframe`
       });
       setIsPlaying(true);
+      
+      // Try to interact with Spotify iframe to autoplay
+      if (iframeRef.current) {
+        try {
+          // This is a hack - we can't directly control the Spotify iframe
+          // but we can try to simulate a click on its play button
+          const spotifyFrame = iframeRef.current as any;
+          if (spotifyFrame.contentDocument) {
+            const playButton = spotifyFrame.contentDocument.querySelector('[data-testid="play-button"]');
+            if (playButton) playButton.click();
+          }
+        } catch (error) {
+          console.log('Cannot interact with Spotify iframe due to security restrictions');
+        }
+      }
+      
       return;
     }
     
@@ -220,13 +239,13 @@ const MusicPlayer: React.FC = () => {
   };
 
   return (
-    <div className="music-player bg-gray-800 text-white py-4">
+    <div className="music-player bg-gray-900/90 text-white py-4">
       <div className="container mx-auto flex flex-col justify-between items-center">
         {isSpotifyTrack && currentTrack?.spotifyId && (
           <div className="w-full mb-4">
             <iframe
               ref={iframeRef}
-              src={`https://open.spotify.com/embed/track/${currentTrack.spotifyId}?utm_source=generator`}
+              src={`https://open.spotify.com/embed/track/${currentTrack.spotifyId}?utm_source=generator&autoplay=1`}
               width="100%"
               height="80"
               frameBorder="0"
@@ -245,11 +264,11 @@ const MusicPlayer: React.FC = () => {
               aria-label="Previous song"
               onClick={previousTrack}
             >
-              <SkipBack size={20} />
+              <SkipBack size={20} className="text-violet-300" />
             </button>
             
             <button 
-              className="btn-icon p-3 bg-green-500 rounded-full" 
+              className="btn-icon p-3 bg-violet-600 hover:bg-violet-700 rounded-full" 
               onClick={togglePlay} 
               aria-label={isPlaying ? "Pause" : "Play"}
             >
@@ -261,20 +280,20 @@ const MusicPlayer: React.FC = () => {
               aria-label="Next song"
               onClick={nextTrack}
             >
-              <SkipForward size={20} />
+              <SkipForward size={20} className="text-violet-300" />
             </button>
           </div>
           
           <div className="hidden md:block flex-1 px-8">
             <div className="flex flex-col items-center">
               <div className="text-center mb-1">
-                <span className="font-medium">
+                <span className="font-medium text-violet-200">
                   {currentTrack ? currentTrack.title : 'No track selected'}
                 </span>
                 {currentTrack && (
                   <>
-                    <span className="mx-1 text-gray-300">•</span>
-                    <span className="text-gray-300">
+                    <span className="mx-1 text-violet-400">•</span>
+                    <span className="text-violet-400">
                       {currentTrack.artist}
                     </span>
                   </>
@@ -282,7 +301,7 @@ const MusicPlayer: React.FC = () => {
               </div>
               {!isSpotifyTrack && (
                 <div className="w-full flex items-center gap-2">
-                  <span className="text-xs text-gray-400 w-10 text-right">
+                  <span className="text-xs text-violet-400 w-10 text-right">
                     {formatTime(currentTime)}
                   </span>
                   <Slider
@@ -292,7 +311,7 @@ const MusicPlayer: React.FC = () => {
                     onValueChange={handleSeekChange}
                     className="w-full"
                   />
-                  <span className="text-xs text-gray-400 w-10">
+                  <span className="text-xs text-violet-400 w-10">
                     {formatTime(duration)}
                   </span>
                 </div>
@@ -307,7 +326,7 @@ const MusicPlayer: React.FC = () => {
                 onClick={toggleMute} 
                 aria-label={isMuted ? "Unmute" : "Mute"}
               >
-                {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                {isMuted ? <VolumeX size={20} className="text-violet-300" /> : <Volume2 size={20} className="text-violet-300" />}
               </button>
               
               <div className="hidden md:block w-28">

@@ -64,12 +64,12 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				game: {
-					primary: '#0EA5E9', // Blue
-					secondary: '#F59E0B', // Orange/Amber
-					accent: '#0EA5E9', // Blue
-					background: '#1E293B', // Dark blue/slate
+					primary: '#9b87f5', // Violet
+					secondary: '#c4a0ff', // Light Violet
+					accent: '#8667e6', // Deep Violet
+					background: '#1A1F2C', // Dark Purple
 					foreground: '#FFFFFF', // White
-					muted: '#CBD5E1', // Light slate
+					muted: '#2c2b4a', // Dark Violet
 				}
 			},
 			borderRadius: {
@@ -101,13 +101,23 @@ export default {
 				'pulse-scale': {
 					'0%, 100%': { transform: 'scale(1)' },
 					'50%': { transform: 'scale(1.05)' }
+				},
+				'gradient-shift': {
+					'0%, 100%': { backgroundPosition: '0% 50%' },
+					'50%': { backgroundPosition: '100% 50%' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'float': 'float 3s ease-in-out infinite',
-				'pulse-scale': 'pulse-scale 2s ease-in-out infinite'
+				'pulse-scale': 'pulse-scale 2s ease-in-out infinite',
+				'gradient-shift': 'gradient-shift 5s ease infinite'
+			},
+			backgroundImage: {
+				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+				'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+				'violet-gradient': 'linear-gradient(to right bottom, #1A1F2C, #2c2b4a)',
 			}
 		}
 	},

@@ -7,44 +7,44 @@
 
 @layer base {
   :root {
-    --background: 220 25% 13%;
-    --foreground: 210 40% 98%;
+    --background: 258 30% 10%;
+    --foreground: 270 20% 96%;
 
-    --card: 220 25% 15%;
-    --card-foreground: 210 40% 98%;
+    --card: 260 30% 12%;
+    --card-foreground: 270 20% 96%;
 
-    --popover: 220 25% 13%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 258 30% 10%;
+    --popover-foreground: 270 20% 96%;
 
-    --primary: 199 89% 48%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 260 83% 75%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 31 94% 58%;
-    --secondary-foreground: 220 25% 13%;
+    --secondary: 288 40% 75%;
+    --secondary-foreground: 258 30% 10%;
 
-    --muted: 220 20% 20%;
-    --muted-foreground: 220 10% 75%;
+    --muted: 260 30% 20%;
+    --muted-foreground: 260 10% 75%;
 
-    --accent: 199 89% 48%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 260 83% 75%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 220 20% 20%;
-    --input: 220 20% 20%;
-    --ring: 199 89% 48%;
+    --border: 260 25% 20%;
+    --input: 260 25% 20%;
+    --ring: 260 83% 75%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 220 30% 9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 220 20% 18%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 220 20% 20%;
-    --sidebar-ring: 199 89% 48%;
+    --sidebar-background: 262 32% 8%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 260 83% 75%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 260 30% 18%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 260 25% 20%;
+    --sidebar-ring: 260 83% 75%;
   }
 }
 
@@ -54,8 +54,9 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-gradient-to-br from-[#1A1F2C] to-[#2c2b4a] text-foreground min-h-screen;
     font-family: 'Poppins', sans-serif;
+    background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -65,7 +66,7 @@
 
 @layer components {
   .game-card {
-    @apply bg-card rounded-xl shadow-lg p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden relative;
+    @apply bg-card rounded-xl shadow-lg p-4 hover:shadow-violet-700/20 transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden relative border border-violet-700/30;
   }
   
   .game-card-img {
@@ -73,10 +74,14 @@
   }
   
   .music-player {
-    @apply fixed bottom-0 left-0 right-0 bg-game-primary bg-opacity-95 text-white p-3 shadow-lg z-50;
+    @apply fixed bottom-0 left-0 right-0 bg-black bg-opacity-80 text-white p-3 shadow-lg z-50 backdrop-blur-sm border-t border-violet-800/30;
   }
   
   .btn-icon {
-    @apply p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-all;
+    @apply p-2 rounded-full hover:bg-violet-700/30 transition-all;
+  }
+  
+  .text-gradient-violet {
+    @apply bg-gradient-to-r from-violet-400 to-purple-300 bg-clip-text text-transparent;
   }
 }

@@ -3,24 +3,25 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 
 type Player = 'X' | 'O' | null;
+type GameStatus = Player | 'draw'; // Adding 'draw' as a possible game status
 type BoardState = Player[];
 
 const TicTacToe = () => {
   const [board, setBoard] = useState<BoardState>(Array(9).fill(null));
   const [isXNext, setIsXNext] = useState<boolean>(true);
-  const [winner, setWinner] = useState<Player>(null);
+  const [winner, setWinner] = useState<GameStatus>(null); // Changed type to GameStatus
   const [winningLine, setWinningLine] = useState<number[] | null>(null);
   const [isComputerThinking, setIsComputerThinking] = useState<boolean>(false);
   
   // Check for winner
   useEffect(() => {
-    const winner = calculateWinner(board);
-    if (winner) {
-      setWinner(winner.player);
-      setWinningLine(winner.line);
+    const winnerResult = calculateWinner(board);
+    if (winnerResult) {
+      setWinner(winnerResult.player);
+      setWinningLine(winnerResult.line);
     } else if (board.every(square => square !== null)) {
       // It's a draw
-      setWinner('draw' as any);
+      setWinner('draw');
     }
   }, [board]);
   

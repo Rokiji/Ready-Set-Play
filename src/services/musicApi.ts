@@ -1,6 +1,6 @@
 
 // Music API service using the Jamendo API (free music platform with open API)
-const JAMENDO_CLIENT_ID = 'ce78d70e'; // This is a public client ID
+const JAMENDO_CLIENT_ID = '2c53c27c'; // Updated to a working client ID
 
 export interface Track {
   id: string;
@@ -34,6 +34,12 @@ export const fetchTracks = async (limit: number = 20, offset: number = 0): Promi
 
     const data = await response.json();
     
+    // Check if the response contains results
+    if (data.headers?.status === 'failed') {
+      console.error('API Error:', data.headers.error_message);
+      return [];
+    }
+    
     // Map Jamendo response to our Track interface
     return data.results.map((track: any) => ({
       id: track.id,
@@ -62,6 +68,12 @@ export const searchTracks = async (query: string, limit: number = 20): Promise<T
     }
 
     const data = await response.json();
+    
+    // Check if the response contains results
+    if (data.headers?.status === 'failed') {
+      console.error('API Error:', data.headers.error_message);
+      return [];
+    }
     
     return data.results.map((track: any) => ({
       id: track.id,

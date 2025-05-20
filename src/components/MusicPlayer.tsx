@@ -15,7 +15,6 @@ const MusicPlayer: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isSpotifyTrack, setIsSpotifyTrack] = useState(false);
   const [apiTrack, setApiTrack] = useState<Track | null>(null);
   const [musicSource, setMusicSource] = useState<'local' | 'api'>('local');
   
@@ -82,13 +81,7 @@ const MusicPlayer: React.FC = () => {
     if (musicSource === 'api' && apiTrack) {
       updateAudioSource(apiTrack.audio);
     } else if (musicSource === 'local' && currentTrack) {
-      // Check if the track is a Spotify track
-      const isSpotify = currentTrack.url.includes('spotify');
-      setIsSpotifyTrack(isSpotify);
-      
-      if (!isSpotify) {
-        updateAudioSource(currentTrack.url);
-      }
+      updateAudioSource(currentTrack.url);
     }
   }, [musicSource, apiTrack, currentTrackIndex, currentTrack]);
   
@@ -145,15 +138,6 @@ const MusicPlayer: React.FC = () => {
   
   // Play current track
   const playTrack = () => {
-    if (isSpotifyTrack && musicSource === 'local') {
-      // For Spotify tracks, we can't directly control them
-      toast.info(`Playing ${currentTrack.title} on Spotify`, {
-        description: `This track plays in the Spotify iframe`
-      });
-      setIsPlaying(true);
-      return;
-    }
-    
     if (audioRef.current) {
       audioRef.current.play()
         .then(() => {
@@ -203,13 +187,6 @@ const MusicPlayer: React.FC = () => {
   
   // Toggle play/pause
   const togglePlay = () => {
-    if (isSpotifyTrack && musicSource === 'local') {
-      // For Spotify, we're just toggling the visual state
-      setIsPlaying(!isPlaying);
-      toast.info(isPlaying ? 'Paused Spotify track' : `Playing ${currentTrack.title} on Spotify`);
-      return;
-    }
-    
     if (!audioRef.current) return;
     
     if (isPlaying) {
@@ -253,7 +230,7 @@ const MusicPlayer: React.FC = () => {
   
   // Handle seek change
   function handleSeekChange(value: number[]) {
-    if (!audioRef.current || (isSpotifyTrack && musicSource === 'local')) return;
+    if (!audioRef.current) return;
     
     const seekTime = value[0];
     audioRef.current.currentTime = seekTime;
@@ -293,25 +270,10 @@ const MusicPlayer: React.FC = () => {
   };
 
   const trackInfo = getCurrentTrackInfo();
-  const showSpotifyIframe = isSpotifyTrack && musicSource === 'local' && currentTrack?.spotifyId;
 
   return (
     <div className="music-player bg-gray-900/90 text-white py-4">
       <div className="container mx-auto flex flex-col justify-between items-center">
-        {showSpotifyIframe && currentTrack?.spotifyId && (
-          <div className="w-full mb-4">
-            <iframe
-              src={`https://open.spotify.com/embed/track/${currentTrack.spotifyId}?utm_source=generator&autoplay=1`}
-              width="100%"
-              height="80"
-              frameBorder="0"
-              allowFullScreen
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              loading="lazy"
-              className="rounded-xl"
-            ></iframe>
-          </div>
-        )}
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
             {/* Music controls */}
@@ -357,47 +319,43 @@ const MusicPlayer: React.FC = () => {
                   </>
                 )}
               </div>
-              {!isSpotifyTrack && (
-                <div className="w-full flex items-center gap-2">
-                  <span className="text-xs text-white/80 w-10 text-right">
-                    {formatDuration(currentTime)}
-                  </span>
-                  <Slider
-                    value={[currentTime]}
-                    max={duration || 100}
-                    step={1}
-                    onValueChange={handleSeekChange}
-                    className="w-full"
-                  />
-                  <span className="text-xs text-white/80 w-10">
-                    {formatDuration(duration)}
-                  </span>
-                </div>
-              )}
+              <div className="w-full flex items-center gap-2">
+                <span className="text-xs text-white/80 w-10 text-right">
+                  {formatDuration(currentTime)}
+                </span>
+                <Slider
+                  value={[currentTime]}
+                  max={duration || 100}
+                  step={1}
+                  onValueChange={handleSeekChange}
+                  className="w-full"
+                />
+                <span className="text-xs text-white/80 w-10">
+                  {formatDuration(duration)}
+                </span>
+              </div>
             </div>
           </div>
           
-          {!isSpotifyTrack && (
-            <div className="flex items-center gap-2">
-              <button 
-                className="btn-icon" 
-                onClick={toggleMute} 
-                aria-label={isMuted ? "Unmute" : "Mute"}
-              >
-                {isMuted ? <VolumeX size={20} className="text-white" /> : <Volume2 size={20} className="text-white" />}
-              </button>
-              
-              <div className="hidden md:block w-28">
-                <Slider
-                  value={[isMuted ? 0 : volume]}
-                  max={100}
-                  step={1}
-                  onValueChange={handleVolumeChange}
-                  className="w-full"
-                />
-              </div>
+          <div className="flex items-center gap-2">
+            <button 
+              className="btn-icon" 
+              onClick={toggleMute} 
+              aria-label={isMuted ? "Unmute" : "Mute"}
+            >
+              {isMuted ? <VolumeX size={20} className="text-white" /> : <Volume2 size={20} className="text-white" />}
+            </button>
+            
+            <div className="hidden md:block w-28">
+              <Slider
+                value={[isMuted ? 0 : volume]}
+                max={100}
+                step={1}
+                onValueChange={handleVolumeChange}
+                className="w-full"
+              />
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

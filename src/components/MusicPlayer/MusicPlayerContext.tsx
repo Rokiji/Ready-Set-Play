@@ -1,14 +1,38 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
+import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
 import { songsData } from '@/data/musicData';
 import { toast } from "sonner";
 import { formatDuration } from '@/services/musicApi';
 import type { Track } from '@/services/musicApi';
 
-const MusicPlayer: React.FC = () => {
+interface MusicPlayerContextProps {
+  currentTrackIndex: number;
+  isPlaying: boolean;
+  volume: number;
+  isMuted: boolean;
+  currentTime: number;
+  duration: number;
+  apiTrack: Track | null;
+  musicSource: 'local' | 'api';
+  audioReady: boolean;
+  audioRef: React.RefObject<HTMLAudioElement>;
+  currentTrack: any;
+  togglePlay: () => void;
+  nextTrack: () => void;
+  previousTrack: () => void;
+  handleVolumeChange: (value: number[]) => void;
+  handleSeekChange: (value: number[]) => void;
+  toggleMute: () => void;
+  getCurrentTrackInfo: () => {
+    title: string;
+    artist: string;
+    image: string;
+  };
+}
+
+const MusicPlayerContext = createContext<MusicPlayerContextProps | undefined>(undefined);
+
+export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(50);
@@ -290,97 +314,38 @@ const MusicPlayer: React.FC = () => {
     };
   };
 
-  const trackInfo = getCurrentTrackInfo();
+  const contextValue: MusicPlayerContextProps = {
+    currentTrackIndex,
+    isPlaying,
+    volume,
+    isMuted,
+    currentTime,
+    duration,
+    apiTrack,
+    musicSource,
+    audioReady,
+    audioRef,
+    currentTrack,
+    togglePlay,
+    nextTrack,
+    previousTrack,
+    handleVolumeChange,
+    handleSeekChange,
+    toggleMute,
+    getCurrentTrackInfo
+  };
 
   return (
-    <div className="music-player bg-gray-900/90 text-white py-4">
-      <div className="container mx-auto flex flex-col justify-between items-center">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            {/* Music controls */}
-            <button 
-              className={`btn-icon ${musicSource === 'api' ? 'opacity-50' : ''}`} 
-              aria-label="Previous song"
-              onClick={previousTrack}
-              disabled={musicSource === 'api'}
-            >
-              <SkipBack size={20} className="text-white" />
-            </button>
-            
-            <button 
-              className="btn-icon p-3 bg-violet-600 hover:bg-violet-700 rounded-full" 
-              onClick={togglePlay} 
-              aria-label={isPlaying ? "Pause" : "Play"}
-            >
-              {isPlaying ? <Pause size={24} /> : <Play size={24} />}
-            </button>
-            
-            <button 
-              className={`btn-icon ${musicSource === 'api' ? 'opacity-50' : ''}`} 
-              aria-label="Next song"
-              onClick={nextTrack}
-              disabled={musicSource === 'api'}
-            >
-              <SkipForward size={20} className="text-white" />
-            </button>
-          </div>
-          
-          <div className="hidden md:block flex-1 px-8">
-            <div className="flex flex-col items-center">
-              <div className="text-center mb-1">
-                <span className="font-medium text-white">
-                  {trackInfo.title}
-                </span>
-                {trackInfo.artist && (
-                  <>
-                    <span className="mx-1 text-white/80">•</span>
-                    <span className="text-white/80">
-                      {trackInfo.artist}
-                    </span>
-                  </>
-                )}
-              </div>
-              <div className="w-full flex items-center gap-2">
-                <span className="text-xs text-white/80 w-10 text-right">
-                  {formatDuration(currentTime)}
-                </span>
-                <Slider
-                  value={[currentTime]}
-                  max={duration || 100}
-                  step={1}
-                  onValueChange={handleSeekChange}
-                  className="w-full"
-                />
-                <span className="text-xs text-white/80 w-10">
-                  {formatDuration(duration)}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button 
-              className="btn-icon" 
-              onClick={toggleMute} 
-              aria-label={isMuted ? "Unmute" : "Mute"}
-            >
-              {isMuted ? <VolumeX size={20} className="text-white" /> : <Volume2 size={20} className="text-white" />}
-            </button>
-            
-            <div className="hidden md:block w-28">
-              <Slider
-                value={[isMuted ? 0 : volume]}
-                max={100}
-                step={1}
-                onValueChange={handleVolumeChange}
-                className="w-full"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <MusicPlayerContext.Provider value={contextValue}>
+      {children}
+    </MusicPlayerContext.Provider>
   );
 };
 
-export default MusicPlayer;
+export const useMusicPlayer = () => {
+  const context = useContext(MusicPlayerContext);
+  if (context === undefined) {
+    throw new Error('useMusicPlayer must be used within a MusicPlayerProvider');
+  }
+  return context;
+};

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Minus, Maximize2 } from 'lucide-react';
 import { songsData } from '@/data/musicData';
 import { toast } from "sonner";
 
@@ -13,6 +13,7 @@ const MusicPlayer: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isSpotifyTrack, setIsSpotifyTrack] = useState(false);
+  const [minimized, setMinimized] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -239,109 +240,151 @@ const MusicPlayer: React.FC = () => {
   }
 
   return (
-    <div className="music-player bg-gray-900/90 text-white py-4">
-      <div className="container mx-auto flex flex-col justify-between items-center">
-        {isSpotifyTrack && currentTrack?.spotifyId && (
-          <div className="w-full mb-4">
-            <iframe
-              ref={iframeRef}
-              src={`https://open.spotify.com/embed/track/${currentTrack.spotifyId}?utm_source=generator&autoplay=1`}
-              width="100%"
-              height="80"
-              frameBorder="0"
-              allowFullScreen
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              loading="lazy"
-              className="rounded-xl"
-            ></iframe>
-          </div>
-        )}
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            {/* Music controls */}
-            <button 
-              className="btn-icon" 
-              aria-label="Previous song"
-              onClick={previousTrack}
-            >
-              <SkipBack size={20} className="text-white" />
-            </button>
-            
-            <button 
-              className="btn-icon p-3 bg-violet-600 hover:bg-violet-700 rounded-full" 
-              onClick={togglePlay} 
-              aria-label={isPlaying ? "Pause" : "Play"}
-            >
-              {isPlaying ? <Pause size={24} /> : <Play size={24} />}
-            </button>
-            
-            <button 
-              className="btn-icon" 
-              aria-label="Next song"
-              onClick={nextTrack}
-            >
-              <SkipForward size={20} className="text-white" />
-            </button>
-          </div>
-          
-          <div className="hidden md:block flex-1 px-8">
-            <div className="flex flex-col items-center">
-              <div className="text-center mb-1">
-                <span className="font-medium text-white">
-                  {currentTrack ? currentTrack.title : 'No track selected'}
-                </span>
-                {currentTrack && (
-                  <>
-                    <span className="mx-1 text-white/80">•</span>
-                    <span className="text-white/80">
-                      {currentTrack.artist}
-                    </span>
-                  </>
-                )}
-              </div>
-              {!isSpotifyTrack && (
-                <div className="w-full flex items-center gap-2">
-                  <span className="text-xs text-white/80 w-10 text-right">
-                    {formatTime(currentTime)}
-                  </span>
-                  <Slider
-                    value={[currentTime]}
-                    max={duration || 100}
-                    step={1}
-                    onValueChange={handleSeekChange}
-                    className="w-full"
-                  />
-                  <span className="text-xs text-white/80 w-10">
-                    {formatTime(duration)}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {!isSpotifyTrack && (
-            <div className="flex items-center gap-2">
+    <div className="music-player bg-gray-900/90 text-white py-4 relative">
+      {/* Minimize button in upper right */}
+      {!minimized && (
+        <button
+          className="absolute top-2 right-4 z-10 p-1 rounded hover:bg-gray-800 transition"
+          aria-label="Minimize player"
+          onClick={() => setMinimized(true)}
+        >
+          <Minus size={18} />
+        </button>
+      )}
+      {minimized ? (
+        <div className="flex items-center justify-between px-4 py-2 bg-gray-900/90 rounded shadow w-full">
+          <span className="text-sm text-white/80">
+            {currentTrack ? currentTrack.title : 'No track selected'}
+          </span>
+          <button
+            className="ml-2 p-1 rounded hover:bg-gray-800 transition"
+            aria-label="Restore player"
+            onClick={() => setMinimized(false)}
+          >
+            <Maximize2 size={18} />
+          </button>
+        </div>
+      ) : (
+        <div className="container mx-auto flex flex-col justify-between items-center">
+          {isSpotifyTrack && currentTrack?.spotifyId && (
+            <div className="w-full mb-4 flex items-center justify-between">
+              {/* Previous button on the left */}
               <button 
-                className="btn-icon" 
-                onClick={toggleMute} 
-                aria-label={isMuted ? "Unmute" : "Mute"}
+                className="btn-icon mr-2" 
+                aria-label="Previous song"
+                onClick={previousTrack}
               >
-                {isMuted ? <VolumeX size={20} className="text-white" /> : <Volume2 size={20} className="text-white" />}
+                <SkipBack size={20} className="text-white" />
               </button>
-              
-              <div className="hidden md:block w-28">
-                <Slider
-                  value={[isMuted ? 0 : volume]}
-                  max={100}
-                  step={1}
-                  onValueChange={handleVolumeChange}
-                  className="w-full"
-                />
-              </div>
+              {/* Spotify iframe in the center */}
+              <iframe
+                ref={iframeRef}
+                src={`https://open.spotify.com/embed/track/${currentTrack.spotifyId}?utm_source=generator&autoplay=1`}
+                width="100%"
+                height="80"
+                frameBorder="0"
+                allowFullScreen
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"
+                className="rounded-xl flex-1"
+              ></iframe>
+              {/* Next button on the right */}
+              <button 
+                className="btn-icon ml-2" 
+                aria-label="Next song"
+                onClick={nextTrack}
+              >
+                <SkipForward size={20} className="text-white" />
+              </button>
             </div>
           )}
+          <div className="container mx-auto flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              {/* Music controls */}
+              {/* Remove prev/next buttons for Spotify, keep for non-Spotify */}
+              {!isSpotifyTrack && (
+                <>
+                  <button 
+                    className="btn-icon" 
+                    aria-label="Previous song"
+                    onClick={previousTrack}
+                  >
+                    <SkipBack size={20} className="text-white" />
+                  </button>
+                  {/* Play/Pause button removed */}
+                  <button 
+                    className="btn-icon" 
+                    aria-label="Next song"
+                    onClick={nextTrack}
+                  >
+                    <SkipForward size={20} className="text-white" />
+                  </button>
+                </>
+              )}
+            </div>
+            
+            <div className="hidden md:block flex-1 px-8">
+              <div className="flex flex-col items-center">
+                {/* Remove title/artist text for Spotify tracks */}
+                {(!isSpotifyTrack) && (
+                  <div className="text-center mb-1">
+                    <span className="font-medium text-white">
+                      {currentTrack ? currentTrack.title : 'No track selected'}
+                    </span>
+                    {currentTrack && (
+                      <>
+                        <span className="mx-1 text-white/80">•</span>
+                        <span className="text-white/80">
+                          {currentTrack.artist}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                )}
+                {!isSpotifyTrack && (
+                  <div className="w-full flex items-center gap-2">
+                    <span className="text-xs text-white/80 w-10 text-right">
+                      {formatTime(currentTime)}
+                    </span>
+                    <Slider
+                      value={[currentTime]}
+                      max={duration || 100}
+                      step={1}
+                      onValueChange={handleSeekChange}
+                      className="w-full"
+                    />
+                    <span className="text-xs text-white/80 w-10">
+                      {formatTime(duration)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {!isSpotifyTrack && (
+              <div className="flex items-center gap-2">
+                <button 
+                  className="btn-icon" 
+                  onClick={toggleMute} 
+                  aria-label={isMuted ? "Unmute" : "Mute"}
+                >
+                  {isMuted ? <VolumeX size={20} className="text-white" /> : <Volume2 size={20} className="text-white" />}
+                </button>
+                
+                <div className="hidden md:block w-28">
+                  <Slider
+                    value={[isMuted ? 0 : volume]}
+                    max={100}
+                    step={1}
+                    onValueChange={handleVolumeChange}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

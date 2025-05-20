@@ -1,9 +1,12 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
 import { songsData } from '@/data/musicData';
 import { toast } from "sonner";
+import { formatDuration } from '@/services/musicApi';
+import type { Track } from '@/services/musicApi';
 
 const MusicPlayer: React.FC = () => {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -13,35 +16,52 @@ const MusicPlayer: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isSpotifyTrack, setIsSpotifyTrack] = useState(false);
+  const [apiTrack, setApiTrack] = useState<Track | null>(null);
+  const [musicSource, setMusicSource] = useState<'local' | 'api'>('local');
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   
-  // Get current track from songs data
+  // Get current track from songs data (for local tracks)
   const currentTrack = songsData[currentTrackIndex];
 
   useEffect(() => {
-    // Check localStorage for previously selected song
-    const storedSongIndex = localStorage.getItem('current_song_index');
-    if (storedSongIndex) {
-      const parsedIndex = parseInt(storedSongIndex, 10);
-      if (!isNaN(parsedIndex) && parsedIndex >= 0 && parsedIndex < songsData.length) {
-        setCurrentTrackIndex(parsedIndex);
+    // Check localStorage for previously selected track source
+    const storedSource = localStorage.getItem('music_source');
+    if (storedSource === 'api') {
+      const storedTrack = localStorage.getItem('api_track');
+      if (storedTrack) {
+        try {
+          setApiTrack(JSON.parse(storedTrack));
+          setMusicSource('api');
+        } catch (e) {
+          console.error('Failed to parse stored API track', e);
+        }
+      }
+    } else {
+      // Check localStorage for previously selected song index
+      const storedSongIndex = localStorage.getItem('current_song_index');
+      if (storedSongIndex) {
+        const parsedIndex = parseInt(storedSongIndex, 10);
+        if (!isNaN(parsedIndex) && parsedIndex >= 0 && parsedIndex < songsData.length) {
+          setCurrentTrackIndex(parsedIndex);
+          setMusicSource('local');
+        }
       }
     }
 
-    // Create audio element for non-Spotify tracks
+    // Create audio element
     const audio = new Audio();
     audioRef.current = audio;
     
-    // Setup event listeners for HTML5 audio
+    // Setup event listeners for audio
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('ended', handleTrackEnded);
     audio.addEventListener('error', handleAudioError);
     
-    // Listen for custom event to play a specific song
+    // Listen for custom events to play songs
     window.addEventListener('play-song', handlePlaySongEvent);
+    window.addEventListener('play-api-track', handlePlayApiTrackEvent);
     
     // Cleanup function
     return () => {
@@ -53,47 +73,68 @@ const MusicPlayer: React.FC = () => {
         audioRef.current.removeEventListener('error', handleAudioError);
       }
       window.removeEventListener('play-song', handlePlaySongEvent);
+      window.removeEventListener('play-api-track', handlePlayApiTrackEvent);
     };
   }, []);
   
-  // Update audio source when currentTrackIndex changes
+  // Update audio source when track changes
   useEffect(() => {
-    if (!currentTrack) return;
-    
-    // Save track to localStorage
-    localStorage.setItem('current_song_index', currentTrackIndex.toString());
-    
-    // Check if the track is a Spotify track
-    const isSpotify = currentTrack.url.includes('spotify');
-    setIsSpotifyTrack(isSpotify);
-    
-    if (!isSpotify && audioRef.current) {
-      // Handle regular audio tracks
-      const wasPlaying = !audioRef.current.paused;
+    if (musicSource === 'api' && apiTrack) {
+      updateAudioSource(apiTrack.audio);
+    } else if (musicSource === 'local' && currentTrack) {
+      // Check if the track is a Spotify track
+      const isSpotify = currentTrack.url.includes('spotify');
+      setIsSpotifyTrack(isSpotify);
       
-      // Update source
-      audioRef.current.src = currentTrack.url;
-      audioRef.current.load();
-      
-      // Set volume
-      audioRef.current.volume = isMuted ? 0 : volume / 100;
-      
-      // Play if it was already playing
-      if (wasPlaying) {
-        playTrack();
+      if (!isSpotify) {
+        updateAudioSource(currentTrack.url);
       }
-    } else {
-      // For Spotify tracks, we'll use the iframe
-      // The iframe will handle playback internally
-      if (isPlaying) setIsPlaying(false);
     }
-  }, [currentTrackIndex, currentTrack]);
+  }, [musicSource, apiTrack, currentTrackIndex, currentTrack]);
   
-  // Handle custom play-song event
+  const updateAudioSource = (src: string) => {
+    if (!audioRef.current) return;
+    
+    const wasPlaying = !audioRef.current.paused;
+    
+    // Update source
+    audioRef.current.src = src;
+    audioRef.current.load();
+    
+    // Set volume
+    audioRef.current.volume = isMuted ? 0 : volume / 100;
+    
+    // Play if it was already playing
+    if (wasPlaying) {
+      playTrack();
+    }
+  };
+  
+  // Handle custom play-song event for local library
   const handlePlaySongEvent = (event: Event) => {
     const customEvent = event as CustomEvent;
     if (customEvent.detail && typeof customEvent.detail.songIndex === 'number') {
       setCurrentTrackIndex(customEvent.detail.songIndex);
+      setMusicSource('local');
+      setApiTrack(null);
+      localStorage.setItem('music_source', 'local');
+      
+      // Auto-play the selected song immediately
+      setIsPlaying(true);
+      setTimeout(() => {
+        playTrack();
+      }, 100);
+    }
+  };
+  
+  // Handle custom play-api-track event
+  const handlePlayApiTrackEvent = (event: Event) => {
+    const customEvent = event as CustomEvent;
+    if (customEvent.detail && customEvent.detail.track) {
+      setApiTrack(customEvent.detail.track);
+      setMusicSource('api');
+      localStorage.setItem('music_source', 'api');
+      
       // Auto-play the selected song immediately
       setIsPlaying(true);
       setTimeout(() => {
@@ -104,28 +145,12 @@ const MusicPlayer: React.FC = () => {
   
   // Play current track
   const playTrack = () => {
-    if (isSpotifyTrack) {
-      // For Spotify tracks, we rely on the iframe's built-in controls
+    if (isSpotifyTrack && musicSource === 'local') {
+      // For Spotify tracks, we can't directly control them
       toast.info(`Playing ${currentTrack.title} on Spotify`, {
         description: `This track plays in the Spotify iframe`
       });
       setIsPlaying(true);
-      
-      // Try to interact with Spotify iframe to autoplay
-      if (iframeRef.current) {
-        try {
-          // This is a hack - we can't directly control the Spotify iframe
-          // but we can try to simulate a click on its play button
-          const spotifyFrame = iframeRef.current as any;
-          if (spotifyFrame.contentDocument) {
-            const playButton = spotifyFrame.contentDocument.querySelector('[data-testid="play-button"]');
-            if (playButton) playButton.click();
-          }
-        } catch (error) {
-          console.log('Cannot interact with Spotify iframe due to security restrictions');
-        }
-      }
-      
       return;
     }
     
@@ -165,21 +190,21 @@ const MusicPlayer: React.FC = () => {
   
   // Handle track ended event
   function handleTrackEnded() {
-    nextTrack();
-  }
-  
-  // Format time in minutes:seconds
-  function formatTime(time: number) {
-    if (isNaN(time)) return "0:00";
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    if (musicSource === 'local') {
+      nextTrack();
+    } else {
+      setIsPlaying(false);
+      setCurrentTime(0);
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+      }
+    }
   }
   
   // Toggle play/pause
   const togglePlay = () => {
-    if (isSpotifyTrack) {
-      // For Spotify, we're just toggling the visual state as the iframe controls playback
+    if (isSpotifyTrack && musicSource === 'local') {
+      // For Spotify, we're just toggling the visual state
       setIsPlaying(!isPlaying);
       toast.info(isPlaying ? 'Paused Spotify track' : `Playing ${currentTrack.title} on Spotify`);
       return;
@@ -195,16 +220,22 @@ const MusicPlayer: React.FC = () => {
     }
   };
   
-  // Next track
+  // Next track (only for local library)
   function nextTrack() {
+    if (musicSource === 'api') return;
+    
     const newIndex = (currentTrackIndex + 1) % songsData.length;
     setCurrentTrackIndex(newIndex);
+    localStorage.setItem('current_song_index', newIndex.toString());
   }
   
-  // Previous track
+  // Previous track (only for local library)
   function previousTrack() {
+    if (musicSource === 'api') return;
+    
     const newIndex = (currentTrackIndex - 1 + songsData.length) % songsData.length;
     setCurrentTrackIndex(newIndex);
+    localStorage.setItem('current_song_index', newIndex.toString());
   }
   
   // Handle volume change
@@ -222,7 +253,7 @@ const MusicPlayer: React.FC = () => {
   
   // Handle seek change
   function handleSeekChange(value: number[]) {
-    if (!audioRef.current || isSpotifyTrack) return;
+    if (!audioRef.current || (isSpotifyTrack && musicSource === 'local')) return;
     
     const seekTime = value[0];
     audioRef.current.currentTime = seekTime;
@@ -238,13 +269,38 @@ const MusicPlayer: React.FC = () => {
     audioRef.current.volume = newMuteState ? 0 : volume / 100;
   }
 
+  // Get current track info based on source
+  const getCurrentTrackInfo = () => {
+    if (musicSource === 'api' && apiTrack) {
+      return {
+        title: apiTrack.name,
+        artist: apiTrack.artist_name,
+        image: apiTrack.image
+      };
+    } else if (musicSource === 'local' && currentTrack) {
+      return {
+        title: currentTrack.title,
+        artist: currentTrack.artist,
+        image: '' // Local tracks don't have images in our current setup
+      };
+    }
+    
+    return {
+      title: 'No track selected',
+      artist: '',
+      image: ''
+    };
+  };
+
+  const trackInfo = getCurrentTrackInfo();
+  const showSpotifyIframe = isSpotifyTrack && musicSource === 'local' && currentTrack?.spotifyId;
+
   return (
     <div className="music-player bg-gray-900/90 text-white py-4">
       <div className="container mx-auto flex flex-col justify-between items-center">
-        {isSpotifyTrack && currentTrack?.spotifyId && (
+        {showSpotifyIframe && currentTrack?.spotifyId && (
           <div className="w-full mb-4">
             <iframe
-              ref={iframeRef}
               src={`https://open.spotify.com/embed/track/${currentTrack.spotifyId}?utm_source=generator&autoplay=1`}
               width="100%"
               height="80"
@@ -260,9 +316,10 @@ const MusicPlayer: React.FC = () => {
           <div className="flex items-center gap-4">
             {/* Music controls */}
             <button 
-              className="btn-icon" 
+              className={`btn-icon ${musicSource === 'api' ? 'opacity-50' : ''}`} 
               aria-label="Previous song"
               onClick={previousTrack}
+              disabled={musicSource === 'api'}
             >
               <SkipBack size={20} className="text-white" />
             </button>
@@ -276,9 +333,10 @@ const MusicPlayer: React.FC = () => {
             </button>
             
             <button 
-              className="btn-icon" 
+              className={`btn-icon ${musicSource === 'api' ? 'opacity-50' : ''}`} 
               aria-label="Next song"
               onClick={nextTrack}
+              disabled={musicSource === 'api'}
             >
               <SkipForward size={20} className="text-white" />
             </button>
@@ -288,13 +346,13 @@ const MusicPlayer: React.FC = () => {
             <div className="flex flex-col items-center">
               <div className="text-center mb-1">
                 <span className="font-medium text-white">
-                  {currentTrack ? currentTrack.title : 'No track selected'}
+                  {trackInfo.title}
                 </span>
-                {currentTrack && (
+                {trackInfo.artist && (
                   <>
                     <span className="mx-1 text-white/80">•</span>
                     <span className="text-white/80">
-                      {currentTrack.artist}
+                      {trackInfo.artist}
                     </span>
                   </>
                 )}
@@ -302,7 +360,7 @@ const MusicPlayer: React.FC = () => {
               {!isSpotifyTrack && (
                 <div className="w-full flex items-center gap-2">
                   <span className="text-xs text-white/80 w-10 text-right">
-                    {formatTime(currentTime)}
+                    {formatDuration(currentTime)}
                   </span>
                   <Slider
                     value={[currentTime]}
@@ -312,7 +370,7 @@ const MusicPlayer: React.FC = () => {
                     className="w-full"
                   />
                   <span className="text-xs text-white/80 w-10">
-                    {formatTime(duration)}
+                    {formatDuration(duration)}
                   </span>
                 </div>
               )}

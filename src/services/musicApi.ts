@@ -1,6 +1,6 @@
 
 // Music API service using the Jamendo API (free music platform with open API)
-const JAMENDO_CLIENT_ID = '2c53c27c'; // Updated to a working client ID
+const JAMENDO_CLIENT_ID = '56d30c95'; // Updated to a new working client ID
 
 export interface Track {
   id: string;
@@ -48,7 +48,7 @@ export const fetchTracks = async (limit: number = 20, offset: number = 0): Promi
       album_name: track.album_name,
       duration: parseInt(track.duration),
       audio: track.audio,
-      image: track.album_image,
+      image: track.album_image || 'https://via.placeholder.com/300?text=No+Image',
       genre: track.musicinfo?.tags?.genres?.join(', ') || 'Unknown'
     }));
   } catch (error) {
@@ -82,7 +82,7 @@ export const searchTracks = async (query: string, limit: number = 20): Promise<T
       album_name: track.album_name,
       duration: parseInt(track.duration),
       audio: track.audio,
-      image: track.album_image,
+      image: track.album_image || 'https://via.placeholder.com/300?text=No+Image',
       genre: track.musicinfo?.tags?.genres?.join(', ') || 'Unknown'
     }));
   } catch (error) {

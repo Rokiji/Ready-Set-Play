@@ -17,6 +17,7 @@ const MusicPlayer: React.FC = () => {
   const [duration, setDuration] = useState(0);
   const [apiTrack, setApiTrack] = useState<Track | null>(null);
   const [musicSource, setMusicSource] = useState<'local' | 'api'>('local');
+  const [audioReady, setAudioReady] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
@@ -55,6 +56,7 @@ const MusicPlayer: React.FC = () => {
     // Setup event listeners for audio
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('canplaythrough', handleCanPlayThrough);
     audio.addEventListener('ended', handleTrackEnded);
     audio.addEventListener('error', handleAudioError);
     
@@ -68,6 +70,7 @@ const MusicPlayer: React.FC = () => {
         audioRef.current.pause();
         audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
         audioRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        audioRef.current.removeEventListener('canplaythrough', handleCanPlayThrough);
         audioRef.current.removeEventListener('ended', handleTrackEnded);
         audioRef.current.removeEventListener('error', handleAudioError);
       }
@@ -88,6 +91,9 @@ const MusicPlayer: React.FC = () => {
   const updateAudioSource = (src: string) => {
     if (!audioRef.current) return;
     
+    // Reset audio ready state
+    setAudioReady(false);
+    
     const wasPlaying = !audioRef.current.paused;
     
     // Update source
@@ -97,10 +103,17 @@ const MusicPlayer: React.FC = () => {
     // Set volume
     audioRef.current.volume = isMuted ? 0 : volume / 100;
     
-    // Play if it was already playing
+    // Play if it was already playing and it's not a fresh load
     if (wasPlaying) {
-      playTrack();
+      setTimeout(() => {
+        playTrack();
+      }, 100);
     }
+  };
+  
+  // Handle canplaythrough event for audio element
+  const handleCanPlayThrough = () => {
+    setAudioReady(true);
   };
   
   // Handle custom play-song event for local library
@@ -111,8 +124,9 @@ const MusicPlayer: React.FC = () => {
       setMusicSource('local');
       setApiTrack(null);
       localStorage.setItem('music_source', 'local');
+      localStorage.setItem('current_song_index', customEvent.detail.songIndex.toString());
       
-      // Auto-play the selected song immediately
+      // Auto-play the selected song after a small delay to let source update
       setIsPlaying(true);
       setTimeout(() => {
         playTrack();
@@ -127,8 +141,9 @@ const MusicPlayer: React.FC = () => {
       setApiTrack(customEvent.detail.track);
       setMusicSource('api');
       localStorage.setItem('music_source', 'api');
+      localStorage.setItem('api_track', JSON.stringify(customEvent.detail.track));
       
-      // Auto-play the selected song immediately
+      // Auto-play the selected song after a small delay to let source update
       setIsPlaying(true);
       setTimeout(() => {
         playTrack();
@@ -138,17 +153,23 @@ const MusicPlayer: React.FC = () => {
   
   // Play current track
   const playTrack = () => {
-    if (audioRef.current) {
-      audioRef.current.play()
-        .then(() => {
-          setIsPlaying(true);
-        })
-        .catch(error => {
-          console.error("Error playing audio:", error);
-          toast.error("Couldn't play audio. Please try another track.");
-          setIsPlaying(false);
-        });
+    if (!audioRef.current) return;
+    
+    if (!audioRef.current.src) {
+      toast.error("No audio source available");
+      setIsPlaying(false);
+      return;
     }
+    
+    audioRef.current.play()
+      .then(() => {
+        setIsPlaying(true);
+      })
+      .catch(error => {
+        console.error("Error playing audio:", error);
+        toast.error("Couldn't play audio. Please try another track.");
+        setIsPlaying(false);
+      });
   };
   
   // Handle audio errors

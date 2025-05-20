@@ -40,31 +40,31 @@ const Index = () => {
         </section>
         
         <section>
-          <div className="bg-gray-50 rounded-xl p-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">Why Ready, Set, Play?</h2>
+          <div className="bg-card rounded-xl p-8 text-center border border-violet-700/30">
+            <h2 className="text-2xl font-bold mb-4 text-white">Why Ready, Set, Play?</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="w-12 h-12 bg-game-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Gamepad className="text-game-primary h-6 w-6" />
+              <div className="bg-muted p-6 rounded-lg shadow border border-violet-700/20">
+                <div className="w-12 h-12 bg-violet-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Gamepad className="text-violet-400 h-6 w-6" />
                 </div>
-                <h3 className="font-bold text-lg mb-2">Variety of Games</h3>
-                <p className="text-gray-600">Discover a wide selection of fun mini-games across different genres.</p>
+                <h3 className="font-bold text-lg mb-2 text-white">Variety of Games</h3>
+                <p className="text-foreground">Discover a wide selection of fun mini-games across different genres.</p>
               </div>
               
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="w-12 h-12 bg-game-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Music className="text-game-secondary h-6 w-6" />
+              <div className="bg-muted p-6 rounded-lg shadow border border-violet-700/20">
+                <div className="w-12 h-12 bg-violet-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Music className="text-violet-400 h-6 w-6" />
                 </div>
-                <h3 className="font-bold text-lg mb-2">Integrated Music</h3>
-                <p className="text-gray-600">Play your favorite songs while gaming without switching applications.</p>
+                <h3 className="font-bold text-lg mb-2 text-white">Integrated Music</h3>
+                <p className="text-foreground">Play your favorite songs while gaming without switching applications.</p>
               </div>
               
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="w-12 h-12 bg-game-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Joystick className="text-game-accent h-6 w-6" />
+              <div className="bg-muted p-6 rounded-lg shadow border border-violet-700/20">
+                <div className="w-12 h-12 bg-violet-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Joystick className="text-violet-400 h-6 w-6" />
                 </div>
-                <h3 className="font-bold text-lg mb-2">Easy to Play</h3>
-                <p className="text-gray-600">Simple controls and intuitive interfaces for a seamless gaming experience.</p>
+                <h3 className="font-bold text-lg mb-2 text-white">Easy to Play</h3>
+                <p className="text-foreground">Simple controls and intuitive interfaces for a seamless gaming experience.</p>
               </div>
             </div>
           </div>

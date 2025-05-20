@@ -1,4 +1,3 @@
-
 export interface Game {
   id: string;
   title: string;
@@ -21,7 +20,7 @@ export const gamesData: Game[] = [
     id: "puzzle-masters",
     title: "Puzzle Masters",
     description: "Challenge your brain with engaging puzzles and mind-bending riddles.",
-    imageUrl: "https://images.unsplash.com/photo-1628648561047-ea3b26a99c76?q=80&w=2574&auto=format&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=2574&auto=format&fit=crop",
     genre: "Puzzle",
     component: "PuzzleMasters"
   },
@@ -69,7 +68,7 @@ export const gamesData: Game[] = [
     id: "tic-tac-toe",
     title: "Tic Tac Toe",
     description: "Classic game of X's and O's. Challenge the computer in this strategic battle.",
-    imageUrl: "https://images.unsplash.com/photo-1611032065923-dd392afe6b96?q=80&w=2670&auto=format&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?q=80&w=2670&auto=format&fit=crop", // new tic tac toe photo
     genre: "Strategy",
     component: "TicTacToe"
   }

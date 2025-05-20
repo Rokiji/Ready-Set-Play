@@ -1,28 +1,15 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { songsData } from '@/data/musicData';
-import { Play, Plus, Music, Upload, Search, Loader2 } from 'lucide-react';
+import { songsData, spotifyPlaylistData } from '@/data/musicData';
+import { Play, Plus, Music, Upload } from 'lucide-react';
 import { toast } from 'sonner';
-import { fetchTracks, searchTracks, Track, formatDuration } from '@/services/musicApi';
-import MusicPlayer from '@/components/MusicPlayer';
-import { useQuery } from '@tanstack/react-query';
 
 const MusicPage = () => {
-  const [activeTab, setActiveTab] = useState<'library' | 'jamendo'>('library');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
+  const [activeTab, setActiveTab] = useState<'songs' | 'playlist'>('songs');
 
-  const { data: apiTracks, isLoading, error } = useQuery({
-    queryKey: ['musicTracks'],
-    queryFn: () => fetchTracks(30),
-  });
-
-  const [searchResults, setSearchResults] = useState<Track[]>([]);
-
-  // Function to handle play button click on a song from local library
+  // Function to handle play button click on a song
   const handlePlaySong = (songId: string) => {
     // Find index of song in songsData
     const songIndex = songsData.findIndex(song => song.id === songId);
@@ -30,40 +17,11 @@ const MusicPage = () => {
     // Store selected song index in localStorage to be used by MusicPlayer
     if (songIndex !== -1) {
       localStorage.setItem('current_song_index', songIndex.toString());
-      localStorage.setItem('music_source', 'local');
       // Dispatch a custom event for MusicPlayer to pick up
       window.dispatchEvent(new CustomEvent('play-song', { detail: { songIndex, autoplay: true } }));
       toast(`Now playing ${songsData[songIndex].title}`, {
         description: `by ${songsData[songIndex].artist}`
       });
-    }
-  };
-
-  // Function to handle play button click on a track from API
-  const handlePlayApiTrack = (track: Track) => {
-    localStorage.setItem('api_track', JSON.stringify(track));
-    localStorage.setItem('music_source', 'api');
-    window.dispatchEvent(new CustomEvent('play-api-track', { 
-      detail: { track, autoplay: true } 
-    }));
-    toast(`Now playing ${track.name}`, {
-      description: `by ${track.artist_name}`
-    });
-  };
-
-  // Handle search
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
-    
-    setIsSearching(true);
-    try {
-      const results = await searchTracks(searchQuery);
-      setSearchResults(results);
-    } catch (error) {
-      toast.error('Failed to search for tracks');
-      console.error(error);
-    } finally {
-      setIsSearching(false);
     }
   };
 
@@ -77,27 +35,27 @@ const MusicPage = () => {
           <p className="text-white">Find the perfect soundtrack for your gameplay</p>
         </div>
 
-        {/* Tabs for Songs Library and API */}
+        {/* Tabs for Songs and Playlist */}
         <div className="flex mb-6 border-b border-violet-800/30">
           <button 
-            className={`pb-2 px-4 font-medium ${activeTab === 'library' 
+            className={`pb-2 px-4 font-medium ${activeTab === 'songs' 
               ? 'text-white border-b-2 border-violet-500' 
               : 'text-white/80 hover:text-white'}`}
-            onClick={() => setActiveTab('library')}
+            onClick={() => setActiveTab('songs')}
           >
             Your Library
           </button>
           <button 
-            className={`pb-2 px-4 font-medium ${activeTab === 'jamendo' 
+            className={`pb-2 px-4 font-medium ${activeTab === 'playlist' 
               ? 'text-white border-b-2 border-violet-500' 
               : 'text-white/80 hover:text-white'}`}
-            onClick={() => setActiveTab('jamendo')}
+            onClick={() => setActiveTab('playlist')}
           >
-            Jamendo Music
+            Spotify Playlist
           </button>
         </div>
         
-        {activeTab === 'library' && (
+        {activeTab === 'songs' && (
           <div className="bg-card text-card-foreground rounded-xl shadow-lg overflow-hidden mb-12 border border-violet-800/20">
             <table className="w-full">
               <thead className="bg-violet-900/50 text-white">
@@ -148,128 +106,34 @@ const MusicPage = () => {
           </div>
         )}
 
-        {activeTab === 'jamendo' && (
-          <>
-            <div className="flex items-center mb-6 gap-2">
-              <div className="relative flex-grow">
-                <Input
-                  type="text"
-                  placeholder="Search for tracks..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-card border-violet-800/30 text-white pl-10"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSearch();
-                  }}
-                />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-violet-400 h-4 w-4" />
-              </div>
-              <Button 
-                onClick={handleSearch} 
-                disabled={isSearching}
-                className="bg-violet-600 hover:bg-violet-700 text-white"
-              >
-                {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
-              </Button>
-            </div>
-
-            {searchResults.length > 0 ? (
-              <div className="bg-card text-card-foreground rounded-xl shadow-lg overflow-hidden mb-12 border border-violet-800/20">
-                <h2 className="text-xl font-bold p-4 border-b border-violet-800/20 text-white">Search Results</h2>
-                <div className="max-h-96 overflow-y-auto">
-                  <table className="w-full">
-                    <thead className="bg-violet-900/50 text-white sticky top-0">
-                      <tr>
-                        <th className="py-4 px-6 text-left">Title</th>
-                        <th className="py-4 px-6 text-left hidden md:table-cell">Artist</th>
-                        <th className="py-4 px-6 text-left hidden md:table-cell">Album</th>
-                        <th className="py-4 px-6 text-left hidden sm:table-cell">Duration</th>
-                        <th className="py-4 px-6 text-left">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {searchResults.map((track) => (
-                        <tr key={track.id} className="hover:bg-violet-900/20 border-b border-violet-800/20">
-                          <td className="py-4 px-6 font-medium text-white">{track.name}</td>
-                          <td className="py-4 px-6 text-white/90 hidden md:table-cell">{track.artist_name}</td>
-                          <td className="py-4 px-6 text-white/90 hidden md:table-cell">{track.album_name}</td>
-                          <td className="py-4 px-6 text-white/90 hidden sm:table-cell">{formatDuration(track.duration)}</td>
-                          <td className="py-4 px-6">
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              className="h-8 w-8 hover:bg-violet-700/30 text-white/90 hover:text-white"
-                              onClick={() => handlePlayApiTrack(track)}
-                            >
-                              <Play size={16} />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+        {activeTab === 'playlist' && (
+          <div className="mb-12">
+            <div className="bg-card text-card-foreground rounded-xl shadow-lg overflow-hidden p-6 border border-violet-800/20">
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="md:w-1/3 lg:w-1/4">
+                  <img 
+                    src={spotifyPlaylistData.imageUrl} 
+                    alt={spotifyPlaylistData.name}
+                    className="w-full rounded-xl shadow-md border border-violet-800/30" 
+                  />
+                </div>
+                <div className="md:w-2/3 lg:w-3/4">
+                  <h2 className="text-2xl font-bold mb-2 text-white">{spotifyPlaylistData.name}</h2>
+                  <p className="text-white/90 mb-6">{spotifyPlaylistData.description}</p>
+                  
+                  <iframe 
+                    src={`https://open.spotify.com/embed/playlist/${spotifyPlaylistData.id}?utm_source=generator&theme=0&autoplay=1`}
+                    width="100%" 
+                    height="380" 
+                    frameBorder="0" 
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                    loading="lazy"
+                    className="rounded-xl"
+                  ></iframe>
                 </div>
               </div>
-            ) : searchQuery && !isSearching ? (
-              <div className="text-center p-8 text-white/80">No results found for "{searchQuery}"</div>
-            ) : null}
-
-            <div className="bg-card text-card-foreground rounded-xl shadow-lg overflow-hidden mb-12 border border-violet-800/20">
-              <h2 className="text-xl font-bold p-4 border-b border-violet-800/20 text-white">Popular Tracks</h2>
-              {isLoading ? (
-                <div className="flex justify-center items-center p-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
-                </div>
-              ) : error ? (
-                <div className="text-center p-8 text-white/80">Failed to load tracks. Please try again later.</div>
-              ) : (
-                <div className="max-h-96 overflow-y-auto">
-                  <table className="w-full">
-                    <thead className="bg-violet-900/50 text-white sticky top-0">
-                      <tr>
-                        <th className="py-4 px-6 text-left">Title</th>
-                        <th className="py-4 px-6 text-left hidden md:table-cell">Artist</th>
-                        <th className="py-4 px-6 text-left hidden md:table-cell">Genre</th>
-                        <th className="py-4 px-6 text-left hidden sm:table-cell">Duration</th>
-                        <th className="py-4 px-6 text-left">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {apiTracks?.map((track) => (
-                        <tr key={track.id} className="hover:bg-violet-900/20 border-b border-violet-800/20">
-                          <td className="py-4 px-6 font-medium text-white">
-                            <div className="flex items-center">
-                              <div className="w-10 h-10 rounded overflow-hidden mr-3 flex-shrink-0">
-                                <img src={track.image} alt={track.name} className="w-full h-full object-cover" />
-                              </div>
-                              <span>{track.name}</span>
-                            </div>
-                          </td>
-                          <td className="py-4 px-6 text-white/90 hidden md:table-cell">{track.artist_name}</td>
-                          <td className="py-4 px-6 hidden md:table-cell">
-                            <span className="text-xs py-1 px-2 bg-violet-900/40 text-white rounded-full">
-                              {track.genre || 'Unknown'}
-                            </span>
-                          </td>
-                          <td className="py-4 px-6 text-white/90 hidden sm:table-cell">{formatDuration(track.duration)}</td>
-                          <td className="py-4 px-6">
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              className="h-8 w-8 hover:bg-violet-700/30 text-white/90 hover:text-white"
-                              onClick={() => handlePlayApiTrack(track)}
-                            >
-                              <Play size={16} />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
             </div>
-          </>
+          </div>
         )}
         
         <div className="bg-violet-900/30 rounded-xl p-8 border border-violet-800/30">
@@ -284,8 +148,6 @@ const MusicPage = () => {
           </div>
         </div>
       </main>
-      
-      <MusicPlayer />
     </div>
   );
 };

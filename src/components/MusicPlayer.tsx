@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -11,6 +12,8 @@ const audioElement = new Audio();
 let isAudioPlaying = false;
 // Keep track of current track index across component mounts
 let persistentCurrentTrackIndex = 0;
+// Last played position to resume from
+let lastPlayedPosition = 0;
 
 // Load previously selected song from localStorage if available
 try {
@@ -19,6 +22,9 @@ try {
     const parsedIndex = parseInt(storedIndex, 10);
     if (!isNaN(parsedIndex) && parsedIndex >= 0 && parsedIndex < songsData.length) {
       persistentCurrentTrackIndex = parsedIndex;
+      audioElement.src = songsData[parsedIndex].url;
+      // Load the audio but don't play yet
+      audioElement.load();
     }
   }
 } catch (error) {
@@ -56,14 +62,20 @@ const MusicPlayer: React.FC = () => {
     // If audio was previously playing, restore that state
     if (isAudioPlaying && !isSpotifyTrack) {
       setIsPlaying(true);
-      // Make sure audio is actually playing
+      // Make sure audio is actually playing and resume from last position
       if (audio.paused) {
+        audio.currentTime = lastPlayedPosition;
         audio.play().catch(err => console.error("Failed to resume audio:", err));
       }
     }
     
-    // Cleanup function
+    // Save currentTime on unmount but don't pause the audio
     return () => {
+      // Store the current playback position before unmounting
+      if (audio) {
+        lastPlayedPosition = audio.currentTime;
+      }
+      
       // Remove all event listeners but DON'T pause the audio
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
@@ -180,6 +192,8 @@ const MusicPlayer: React.FC = () => {
   function handleTimeUpdate() {
     if (audioRef.current) {
       setCurrentTime(audioRef.current.currentTime);
+      // Update the lastPlayedPosition as well
+      lastPlayedPosition = audioRef.current.currentTime;
     }
   }
   
@@ -257,6 +271,7 @@ const MusicPlayer: React.FC = () => {
     const seekTime = value[0];
     audioRef.current.currentTime = seekTime;
     setCurrentTime(seekTime);
+    lastPlayedPosition = seekTime;
   }
   
   // Toggle mute

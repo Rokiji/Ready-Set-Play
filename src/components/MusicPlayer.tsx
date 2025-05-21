@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -65,7 +64,20 @@ const MusicPlayer: React.FC = () => {
       // Make sure audio is actually playing and resume from last position
       if (audio.paused) {
         audio.currentTime = lastPlayedPosition;
-        audio.play().catch(err => console.error("Failed to resume audio:", err));
+        // Force play the audio when component mounts
+        const playPromise = audio.play();
+        
+        if (playPromise !== undefined) {
+          playPromise.catch(err => {
+            console.error("Failed to resume audio:", err);
+            // If autoplay is blocked, try again with user gesture
+            const resumePlayback = () => {
+              audio.play().catch(e => console.error("Still failed to play:", e));
+              document.removeEventListener('click', resumePlayback);
+            };
+            document.addEventListener('click', resumePlayback, { once: true });
+          });
+        }
       }
     }
     
@@ -74,6 +86,7 @@ const MusicPlayer: React.FC = () => {
       // Store the current playback position before unmounting
       if (audio) {
         lastPlayedPosition = audio.currentTime;
+        isAudioPlaying = !audio.paused;
       }
       
       // Remove all event listeners but DON'T pause the audio
@@ -83,7 +96,7 @@ const MusicPlayer: React.FC = () => {
       audio.removeEventListener('error', handleAudioError);
       window.removeEventListener('play-song', handlePlaySongEvent);
     };
-  }, []);
+  }, [isSpotifyTrack]);
   
   // Update audio source when currentTrackIndex changes
   useEffect(() => {
@@ -166,17 +179,33 @@ const MusicPlayer: React.FC = () => {
     }
     
     if (audioRef.current) {
-      audioRef.current.play()
-        .then(() => {
-          setIsPlaying(true);
-          isAudioPlaying = true;
-        })
-        .catch(error => {
-          console.error("Error playing audio:", error);
-          toast.error("Couldn't play audio. Please try another track.");
-          setIsPlaying(false);
-          isAudioPlaying = false;
-        });
+      const playPromise = audioRef.current.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true);
+            isAudioPlaying = true;
+          })
+          .catch(error => {
+            console.error("Error playing audio:", error);
+            toast.error("Couldn't play audio. Please try another track.");
+            setIsPlaying(false);
+            isAudioPlaying = false;
+            
+            // If autoplay is blocked, try to play on next user interaction
+            const resumePlayback = () => {
+              audioRef.current.play()
+                .then(() => {
+                  setIsPlaying(true);
+                  isAudioPlaying = true;
+                })
+                .catch(e => console.error("Still failed to play:", e));
+              document.removeEventListener('click', resumePlayback);
+            };
+            document.addEventListener('click', resumePlayback, { once: true });
+          });
+      }
     }
   };
   

@@ -3,7 +3,6 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
 import GameCard from '@/components/GameCard';
-import MusicPlayer from '@/components/MusicPlayer';
 import { gamesData } from '@/data/gamesData';
 import { Gamepad, Music, Joystick } from 'lucide-react';
 
@@ -12,7 +11,7 @@ const Index = () => {
   const featuredGames = gamesData.slice(0, 3);
 
   return (
-    <div className="min-h-screen flex flex-col pb-24">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       <HeroSection />
       
@@ -70,8 +69,6 @@ const Index = () => {
           </div>
         </section>
       </main>
-      
-      <MusicPlayer />
     </div>
   );
 };

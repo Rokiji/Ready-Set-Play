@@ -1,7 +1,5 @@
-
 import React from 'react';
 import Navbar from '@/components/Navbar';
-import MusicPlayer from '@/components/MusicPlayer';
 import { Gamepad, Music, Users } from 'lucide-react';
 
 const AboutPage = () => {
@@ -68,8 +66,6 @@ const AboutPage = () => {
           </div>
         </div>
       </main>
-      
-      <MusicPlayer />
     </div>
   );
 };

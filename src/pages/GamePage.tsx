@@ -1,7 +1,6 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import MusicPlayer from '@/components/MusicPlayer';
 import CatchGame from '@/components/games/CatchGame';
 import PuzzleMasters from '@/components/games/PuzzleMasters';
 import SpaceShooter from '@/components/games/SpaceShooter';
@@ -21,7 +20,7 @@ const GamePage = () => {
 
   if (!game) {
     return (
-      <div className="min-h-screen flex flex-col pb-24">
+      <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="container mx-auto px-6 py-12 flex-grow flex items-center justify-center">
           <div className="text-center">
@@ -32,7 +31,6 @@ const GamePage = () => {
             </Button>
           </div>
         </main>
-        <MusicPlayer />
       </div>
     );
   }
@@ -70,7 +68,7 @@ const GamePage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background pb-24">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       
       <main className="container mx-auto px-6 py-12 flex-grow">
@@ -108,8 +106,6 @@ const GamePage = () => {
           </div>
         </section>
       </main>
-      
-      <MusicPlayer />
     </div>
   );
 };

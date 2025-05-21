@@ -45,6 +45,9 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 260 25% 20%;
     --sidebar-ring: 260 83% 75%;
+    
+    /* Music player height for consistent spacing */
+    --music-player-height: 6rem;
   }
 }
 
@@ -85,3 +88,4 @@
     @apply text-white;
   }
 }
+

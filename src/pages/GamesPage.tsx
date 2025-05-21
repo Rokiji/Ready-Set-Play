@@ -2,12 +2,11 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import GameCard from '@/components/GameCard';
-import MusicPlayer from '@/components/MusicPlayer';
 import { gamesData } from '@/data/gamesData';
 
 const GamesPage = () => {
   return (
-    <div className="min-h-screen flex flex-col pb-24">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       
       <main className="container mx-auto px-6 py-12 flex-grow">
@@ -29,8 +28,6 @@ const GamesPage = () => {
           ))}
         </div>
       </main>
-      
-      <MusicPlayer />
     </div>
   );
 };

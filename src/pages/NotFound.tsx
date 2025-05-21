@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import MusicPlayer from "@/components/MusicPlayer";
 
 const NotFound = () => {
   const location = useLocation();
@@ -33,8 +32,6 @@ const NotFound = () => {
           </Button>
         </div>
       </main>
-      
-      <MusicPlayer />
     </div>
   );
 };

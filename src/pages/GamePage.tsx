@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -22,7 +21,7 @@ const GamePage = () => {
 
   if (!game) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col pb-24">
         <Navbar />
         <main className="container mx-auto px-6 py-12 flex-grow flex items-center justify-center">
           <div className="text-center">
@@ -71,7 +70,7 @@ const GamePage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background pb-24">
       <Navbar />
       
       <main className="container mx-auto px-6 py-12 flex-grow">

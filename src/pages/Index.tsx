@@ -12,7 +12,7 @@ const Index = () => {
   const featuredGames = gamesData.slice(0, 3);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col pb-24">
       <Navbar />
       <HeroSection />
       

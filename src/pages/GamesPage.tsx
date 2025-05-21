@@ -7,7 +7,7 @@ import { gamesData } from '@/data/gamesData';
 
 const GamesPage = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col pb-24">
       <Navbar />
       
       <main className="container mx-auto px-6 py-12 flex-grow">

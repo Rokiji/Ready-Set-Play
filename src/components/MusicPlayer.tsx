@@ -56,6 +56,10 @@ const MusicPlayer: React.FC = () => {
     // If audio was previously playing, restore that state
     if (isAudioPlaying && !isSpotifyTrack) {
       setIsPlaying(true);
+      // Make sure audio is actually playing
+      if (audio.paused) {
+        audio.play().catch(err => console.error("Failed to resume audio:", err));
+      }
     }
     
     // Cleanup function
@@ -265,7 +269,7 @@ const MusicPlayer: React.FC = () => {
   }
 
   return (
-    <div className="music-player bg-gray-900/90 text-white py-4 relative">
+    <div className="music-player bg-gray-900/90 text-white py-4 fixed bottom-0 left-0 right-0 z-50">
       {/* Minimize button in upper right */}
       {!minimized && (
         <button

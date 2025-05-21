@@ -5,9 +5,29 @@ import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Minus, Maximize2 
 import { songsData } from '@/data/musicData';
 import { toast } from "sonner";
 
+// Create a static audio element outside of component to persist across renders and navigation
+const audioElement = new Audio();
+// Track if audio is currently playing (persisted across component mounts)
+let isAudioPlaying = false;
+// Keep track of current track index across component mounts
+let persistentCurrentTrackIndex = 0;
+
+// Load previously selected song from localStorage if available
+try {
+  const storedIndex = localStorage.getItem('current_song_index');
+  if (storedIndex) {
+    const parsedIndex = parseInt(storedIndex, 10);
+    if (!isNaN(parsedIndex) && parsedIndex >= 0 && parsedIndex < songsData.length) {
+      persistentCurrentTrackIndex = parsedIndex;
+    }
+  }
+} catch (error) {
+  console.error('Error reading from localStorage:', error);
+}
+
 const MusicPlayer: React.FC = () => {
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(persistentCurrentTrackIndex);
+  const [isPlaying, setIsPlaying] = useState(isAudioPlaying);
   const [volume, setVolume] = useState(50);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -15,27 +35,16 @@ const MusicPlayer: React.FC = () => {
   const [isSpotifyTrack, setIsSpotifyTrack] = useState(false);
   const [minimized, setMinimized] = useState(false);
   
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(audioElement);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   
   // Get current track from songs data
   const currentTrack = songsData[currentTrackIndex];
 
   useEffect(() => {
-    // Check localStorage for previously selected song
-    const storedSongIndex = localStorage.getItem('current_song_index');
-    if (storedSongIndex) {
-      const parsedIndex = parseInt(storedSongIndex, 10);
-      if (!isNaN(parsedIndex) && parsedIndex >= 0 && parsedIndex < songsData.length) {
-        setCurrentTrackIndex(parsedIndex);
-      }
-    }
-
-    // Create audio element for non-Spotify tracks
-    const audio = new Audio();
-    audioRef.current = audio;
-    
     // Setup event listeners for HTML5 audio
+    const audio = audioRef.current;
+    
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('ended', handleTrackEnded);
@@ -44,15 +53,18 @@ const MusicPlayer: React.FC = () => {
     // Listen for custom event to play a specific song
     window.addEventListener('play-song', handlePlaySongEvent);
     
+    // If audio was previously playing, restore that state
+    if (isAudioPlaying && !isSpotifyTrack) {
+      setIsPlaying(true);
+    }
+    
     // Cleanup function
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
-        audioRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata);
-        audioRef.current.removeEventListener('ended', handleTrackEnded);
-        audioRef.current.removeEventListener('error', handleAudioError);
-      }
+      // Remove all event listeners but DON'T pause the audio
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', handleTrackEnded);
+      audio.removeEventListener('error', handleAudioError);
       window.removeEventListener('play-song', handlePlaySongEvent);
     };
   }, []);
@@ -60,6 +72,9 @@ const MusicPlayer: React.FC = () => {
   // Update audio source when currentTrackIndex changes
   useEffect(() => {
     if (!currentTrack) return;
+    
+    // Update persistent track index
+    persistentCurrentTrackIndex = currentTrackIndex;
     
     // Save track to localStorage
     localStorage.setItem('current_song_index', currentTrackIndex.toString());
@@ -70,7 +85,7 @@ const MusicPlayer: React.FC = () => {
     
     if (!isSpotify && audioRef.current) {
       // Handle regular audio tracks
-      const wasPlaying = !audioRef.current.paused;
+      const wasPlaying = isAudioPlaying || !audioRef.current.paused;
       
       // Update source
       audioRef.current.src = currentTrack.url;
@@ -85,8 +100,11 @@ const MusicPlayer: React.FC = () => {
       }
     } else {
       // For Spotify tracks, we'll use the iframe
-      // The iframe will handle playback internally
-      if (isPlaying) setIsPlaying(false);
+      // If audio was playing, pause it when switching to Spotify
+      if (!isSpotifyTrack && isAudioPlaying) {
+        audioRef.current.pause();
+        isAudioPlaying = false;
+      }
     }
   }, [currentTrackIndex, currentTrack]);
   
@@ -111,6 +129,7 @@ const MusicPlayer: React.FC = () => {
         description: `This track plays in the Spotify iframe`
       });
       setIsPlaying(true);
+      isAudioPlaying = true;
       
       // Try to interact with Spotify iframe to autoplay
       if (iframeRef.current) {
@@ -134,11 +153,13 @@ const MusicPlayer: React.FC = () => {
       audioRef.current.play()
         .then(() => {
           setIsPlaying(true);
+          isAudioPlaying = true;
         })
         .catch(error => {
           console.error("Error playing audio:", error);
           toast.error("Couldn't play audio. Please try another track.");
           setIsPlaying(false);
+          isAudioPlaying = false;
         });
     }
   };
@@ -148,6 +169,7 @@ const MusicPlayer: React.FC = () => {
     console.error("Audio error:", e);
     toast.error("There was a problem playing this track. Please try another one.");
     setIsPlaying(false);
+    isAudioPlaying = false;
   }
   
   // Handle time update event
@@ -181,8 +203,10 @@ const MusicPlayer: React.FC = () => {
   const togglePlay = () => {
     if (isSpotifyTrack) {
       // For Spotify, we're just toggling the visual state as the iframe controls playback
-      setIsPlaying(!isPlaying);
-      toast.info(isPlaying ? 'Paused Spotify track' : `Playing ${currentTrack.title} on Spotify`);
+      const newPlayingState = !isPlaying;
+      setIsPlaying(newPlayingState);
+      isAudioPlaying = newPlayingState;
+      toast.info(newPlayingState ? `Playing ${currentTrack.title} on Spotify` : 'Paused Spotify track');
       return;
     }
     
@@ -191,6 +215,7 @@ const MusicPlayer: React.FC = () => {
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
+      isAudioPlaying = false;
     } else {
       playTrack();
     }
@@ -311,7 +336,16 @@ const MusicPlayer: React.FC = () => {
                   >
                     <SkipBack size={20} className="text-white" />
                   </button>
-                  {/* Play/Pause button removed */}
+                  {/* Play/Pause button */}
+                  <button 
+                    className="btn-icon" 
+                    aria-label={isPlaying ? "Pause" : "Play"}
+                    onClick={togglePlay}
+                  >
+                    {isPlaying ? 
+                      <Pause size={20} className="text-white" /> : 
+                      <Play size={20} className="text-white" />}
+                  </button>
                   <button 
                     className="btn-icon" 
                     aria-label="Next song"

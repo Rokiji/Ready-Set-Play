@@ -21,7 +21,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <div className="pb-24"> {/* Add padding to bottom of all pages */}
+        <div className="pb-32"> {/* Increased padding to match the space at the top of music player */}
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/games" element={<GamesPage />} />

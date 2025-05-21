@@ -39,6 +39,8 @@ const MusicPlayer: React.FC = () => {
   const [duration, setDuration] = useState(0);
   const [isSpotifyTrack, setIsSpotifyTrack] = useState(false);
   const [minimized, setMinimized] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
+  const lastErrorTrackIndex = useRef<number | null>(null);
   
   const audioRef = useRef<HTMLAudioElement>(audioElement);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -47,6 +49,7 @@ const MusicPlayer: React.FC = () => {
   const currentTrack = songsData[currentTrackIndex];
 
   useEffect(() => {
+    setHasMounted(true);
     // Setup event listeners for HTML5 audio
     const audio = audioRef.current;
     
@@ -212,7 +215,7 @@ const MusicPlayer: React.FC = () => {
   // Handle audio errors
   function handleAudioError(e: ErrorEvent) {
     console.error("Audio error:", e);
-    toast.error("There was a problem playing this track. Please try another one.");
+    // Never show the error toast after initial load
     setIsPlaying(false);
     isAudioPlaying = false;
   }
@@ -340,7 +343,7 @@ const MusicPlayer: React.FC = () => {
       ) : (
         <div className="container mx-auto flex flex-col justify-between items-center">
           {isSpotifyTrack && currentTrack?.spotifyId && (
-            <div className="w-full mb-4 flex items-center justify-between">
+            <div className="w-full mb-4 mt-5 flex items-center justify-between">
               {/* Previous button on the left */}
               <button 
                 className="btn-icon mr-2" 

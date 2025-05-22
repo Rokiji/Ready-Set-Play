@@ -351,8 +351,6 @@ const MusicPlayer: React.FC = () => {
     console.log('Track ended event triggered, advancing to next track');
     // Automatically play the next song when the current one finishes
     nextTrack();
-    // Since we've updated the current track index, the useEffect will trigger
-    // and call playTrack() if it was already playing
   }
   
   // Format time in minutes:seconds
@@ -513,108 +511,4 @@ const MusicPlayer: React.FC = () => {
                 aria-label="Next song"
                 onClick={nextTrack}
               >
-                <SkipForward size={20} className="text-white" />
-              </button>
-            </div>
-          )}
-          <div className="container mx-auto flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              {/* Music controls */}
-              {/* Remove prev/next buttons for Spotify, keep for non-Spotify */}
-              {!isSpotifyTrack && (
-                <>
-                  <button 
-                    className="btn-icon" 
-                    aria-label="Previous song"
-                    onClick={previousTrack}
-                  >
-                    <SkipBack size={20} className="text-white" />
-                  </button>
-                  {/* Play/Pause button */}
-                  <button 
-                    className="btn-icon" 
-                    aria-label={isPlaying ? "Pause" : "Play"}
-                    onClick={togglePlay}
-                  >
-                    {isPlaying ? 
-                      <Pause size={20} className="text-white" /> : 
-                      <Play size={20} className="text-white" />}
-                  </button>
-                  <button 
-                    className="btn-icon" 
-                    aria-label="Next song"
-                    onClick={nextTrack}
-                  >
-                    <SkipForward size={20} className="text-white" />
-                  </button>
-                </>
-              )}
-            </div>
-            
-            <div className="hidden md:block flex-1 px-8">
-              <div className="flex flex-col items-center">
-                {/* Remove title/artist text for Spotify tracks */}
-                {(!isSpotifyTrack) && (
-                  <div className="text-center mb-1">
-                    <span className="font-medium text-white">
-                      {currentTrack ? currentTrack.title : 'No track selected'}
-                    </span>
-                    {currentTrack && (
-                      <>
-                        <span className="mx-1 text-white/80">•</span>
-                        <span className="text-white/80">
-                          {currentTrack.artist}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                )}
-                {!isSpotifyTrack && (
-                  <div className="w-full flex items-center gap-2">
-                    <span className="text-xs text-white/80 w-10 text-right">
-                      {formatTime(currentTime)}
-                    </span>
-                    <Slider
-                      value={[currentTime]}
-                      max={duration || 100}
-                      step={1}
-                      onValueChange={handleSeekChange}
-                      className="w-full"
-                    />
-                    <span className="text-xs text-white/80 w-10">
-                      {formatTime(duration)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {!isSpotifyTrack && (
-              <div className="flex items-center gap-2">
-                <button 
-                  className="btn-icon" 
-                  onClick={toggleMute} 
-                  aria-label={isMuted ? "Unmute" : "Mute"}
-                >
-                  {isMuted ? <VolumeX size={20} className="text-white" /> : <Volume2 size={20} className="text-white" />}
-                </button>
-                
-                <div className="hidden md:block w-28">
-                  <Slider
-                    value={[isMuted ? 0 : volume]}
-                    max={100}
-                    step={1}
-                    onValueChange={handleVolumeChange}
-                    className="w-full"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default MusicPlayer;
+                <SkipForward size

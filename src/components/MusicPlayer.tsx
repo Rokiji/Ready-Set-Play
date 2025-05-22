@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -126,7 +127,7 @@ const MusicPlayer: React.FC = () => {
       // Set volume
       audioRef.current.volume = isMuted ? 0 : volume / 100;
       
-      // Play if it was already playing
+      // Play if it was already playing or if we're transitioning from one track to another
       if (wasPlaying) {
         playTrack();
       }
@@ -215,6 +216,9 @@ const MusicPlayer: React.FC = () => {
     // Never show the error toast after initial load
     setIsPlaying(false);
     isAudioPlaying = false;
+    
+    // If we encounter an error, try the next track
+    nextTrack();
   }
   
   // Handle time update event
@@ -235,7 +239,10 @@ const MusicPlayer: React.FC = () => {
   
   // Handle track ended event
   function handleTrackEnded() {
+    // Automatically play the next song when the current one finishes
     nextTrack();
+    // Since we've updated the current track index, the useEffect will trigger
+    // and call playTrack() if it was already playing
   }
   
   // Format time in minutes:seconds
@@ -272,12 +279,17 @@ const MusicPlayer: React.FC = () => {
   function nextTrack() {
     const newIndex = (currentTrackIndex + 1) % songsData.length;
     setCurrentTrackIndex(newIndex);
+    
+    // This will trigger the useEffect that changes the song
+    // If the player was already playing, it will automatically continue playing
   }
   
   // Previous track
   function previousTrack() {
     const newIndex = (currentTrackIndex - 1 + songsData.length) % songsData.length;
     setCurrentTrackIndex(newIndex);
+    
+    // This will also trigger the useEffect that changes the song
   }
   
   // Handle volume change

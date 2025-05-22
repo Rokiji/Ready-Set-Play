@@ -20,7 +20,7 @@ const MusicPlayer: React.FC = () => {
       {minimized ? (
         <div className="flex items-center justify-between px-4 py-2 bg-gray-900/90 rounded shadow w-full">
           <span className="text-sm text-white/80">
-            {spotifyPlaylistData ? spotifyPlaylistData.name : 'No playlist'}
+            {/* No playlist name/description */}
           </span>
           <button
             className="ml-2 p-1 rounded hover:bg-gray-800 transition"
@@ -33,10 +33,6 @@ const MusicPlayer: React.FC = () => {
       ) : (
         <div className="container mx-auto flex flex-col justify-between items-center">
           <div className="w-full mb-4 mt-5 flex flex-col items-center justify-center">
-            <div className="mb-2 text-center">
-              <div className="font-bold text-lg">{spotifyPlaylistData.name}</div>
-              <div className="text-white/80 text-sm">{spotifyPlaylistData.description}</div>
-            </div>
             <iframe
               src={`https://open.spotify.com/embed/playlist/${spotifyPlaylistData.id}?utm_source=generator&autoplay=1`}
               width="100%"

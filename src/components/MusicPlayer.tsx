@@ -153,64 +153,61 @@ const MusicPlayer: React.FC = () => {
     }
   };
   
+  // Store last Spotify track index outside the function
+  let lastSpotifyTrackIndex: number | null = null;
+  
   // Play current track
   const playTrack = () => {
-    if (isSpotifyTrack) {
-      // For Spotify tracks, we rely on the iframe's built-in controls
-      toast.info(`Playing ${currentTrack.title} on Spotify`, {
-        description: `This track plays in the Spotify iframe`
-      });
-      setIsPlaying(true);
-      isAudioPlaying = true;
-      
-      // Try to interact with Spotify iframe to autoplay
-      if (iframeRef.current) {
-        try {
-          // This is a hack - we can't directly control the Spotify iframe
-          // but we can try to simulate a click on its play button
-          const spotifyFrame = iframeRef.current as any;
-          if (spotifyFrame.contentDocument) {
-            const playButton = spotifyFrame.contentDocument.querySelector('[data-testid="play-button"]');
-            if (playButton) playButton.click();
+      if (isSpotifyTrack) {
+        setIsPlaying(true);
+        isAudioPlaying = true;
+        // Try to interact with Spotify iframe to autoplay
+        if (iframeRef.current) {
+          try {
+            // This is a hack - we can't directly control the Spotify iframe
+            // but we can try to simulate a click on its play button
+            const spotifyFrame = iframeRef.current as any;
+            if (spotifyFrame.contentDocument) {
+              const playButton = spotifyFrame.contentDocument.querySelector('[data-testid="play-button"]');
+              if (playButton) playButton.click();
+            }
+          } catch (error) {
+            console.log('Cannot interact with Spotify iframe due to security restrictions');
           }
-        } catch (error) {
-          console.log('Cannot interact with Spotify iframe due to security restrictions');
+        }
+        return;
+      }
+      
+      if (audioRef.current) {
+        const playPromise = audioRef.current.play();
+        
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              setIsPlaying(true);
+              isAudioPlaying = true;
+            })
+            .catch(error => {
+              console.error("Error playing audio:", error);
+              toast.error("Couldn't play audio. Please try another track.");
+              setIsPlaying(false);
+              isAudioPlaying = false;
+              
+              // If autoplay is blocked, try to play on next user interaction
+              const resumePlayback = () => {
+                audioRef.current.play()
+                  .then(() => {
+                    setIsPlaying(true);
+                    isAudioPlaying = true;
+                  })
+                  .catch(e => console.error("Still failed to play:", e));
+                document.removeEventListener('click', resumePlayback);
+              };
+              document.addEventListener('click', resumePlayback, { once: true });
+            });
         }
       }
-      
-      return;
-    }
-    
-    if (audioRef.current) {
-      const playPromise = audioRef.current.play();
-      
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setIsPlaying(true);
-            isAudioPlaying = true;
-          })
-          .catch(error => {
-            console.error("Error playing audio:", error);
-            toast.error("Couldn't play audio. Please try another track.");
-            setIsPlaying(false);
-            isAudioPlaying = false;
-            
-            // If autoplay is blocked, try to play on next user interaction
-            const resumePlayback = () => {
-              audioRef.current.play()
-                .then(() => {
-                  setIsPlaying(true);
-                  isAudioPlaying = true;
-                })
-                .catch(e => console.error("Still failed to play:", e));
-              document.removeEventListener('click', resumePlayback);
-            };
-            document.addEventListener('click', resumePlayback, { once: true });
-          });
-      }
-    }
-  };
+    };
   
   // Handle audio errors
   function handleAudioError(e: ErrorEvent) {

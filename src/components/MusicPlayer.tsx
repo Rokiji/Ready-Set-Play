@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -14,6 +13,12 @@ let isAudioPlaying = false;
 let persistentCurrentTrackIndex = 0;
 // Last played position to resume from
 let lastPlayedPosition = 0;
+// Timer to check if a song has ended (for Spotify tracks)
+let endCheckTimerId: number | null = null;
+// Last time we checked the playback progress
+let lastProgressCheck = 0;
+// Counter for consecutive errors
+let errorCount = 0;
 
 // Load previously selected song from localStorage if available
 try {
@@ -41,13 +46,50 @@ const MusicPlayer: React.FC = () => {
   const [isSpotifyTrack, setIsSpotifyTrack] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
+  const [lastProgressTime, setLastProgressTime] = useState(0);
   const lastErrorTrackIndex = useRef<number | null>(null);
   
   const audioRef = useRef<HTMLAudioElement>(audioElement);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const songEndTimerRef = useRef<number | null>(null);
   
   // Get current track from songs data
   const currentTrack = songsData[currentTrackIndex];
+
+  // Setup a timer to check if the song has ended for Spotify tracks
+  useEffect(() => {
+    // Clear any existing timer
+    if (endCheckTimerId) {
+      window.clearInterval(endCheckTimerId);
+      endCheckTimerId = null;
+    }
+    
+    // Only set up for Spotify tracks and when playing
+    if (isSpotifyTrack && isPlaying) {
+      // Check every 5 seconds if the song progress has changed
+      endCheckTimerId = window.setInterval(() => {
+        const now = Date.now();
+        const progressDiff = currentTime - lastProgressTime;
+        
+        // If no progress for 5 seconds and we're not at the start (which might be loading),
+        // assume the song ended and move to next
+        if (progressDiff === 0 && currentTime > 0 && currentTime > duration - 10) {
+          console.log('Spotify track appears to have ended, advancing to next track');
+          nextTrack();
+        }
+        
+        // Update last checked time
+        setLastProgressTime(currentTime);
+      }, 5000);
+    }
+    
+    return () => {
+      if (endCheckTimerId) {
+        window.clearInterval(endCheckTimerId);
+        endCheckTimerId = null;
+      }
+    };
+  }, [isSpotifyTrack, isPlaying, currentTime, lastProgressTime, duration]);
 
   useEffect(() => {
     setHasMounted(true);
@@ -99,12 +141,22 @@ const MusicPlayer: React.FC = () => {
       audio.removeEventListener('ended', handleTrackEnded);
       audio.removeEventListener('error', handleAudioError);
       window.removeEventListener('play-song', handlePlaySongEvent);
+      
+      // Clear any interval timers
+      if (songEndTimerRef.current) {
+        window.clearInterval(songEndTimerRef.current);
+      }
     };
   }, [isSpotifyTrack]);
   
   // Update audio source when currentTrackIndex changes
   useEffect(() => {
     if (!currentTrack) return;
+    
+    console.log(`Switching to track ${currentTrackIndex}: ${currentTrack.title}`);
+    
+    // Reset error count when changing tracks
+    errorCount = 0;
     
     // Update persistent track index
     persistentCurrentTrackIndex = currentTrackIndex;
@@ -138,6 +190,16 @@ const MusicPlayer: React.FC = () => {
         audioRef.current.pause();
         isAudioPlaying = false;
       }
+      
+      // Auto-play Spotify track if we were already playing
+      if (isPlaying) {
+        // We need a slight delay for the iframe to load
+        setTimeout(() => {
+          console.log('Auto-playing Spotify track after track change');
+          setIsPlaying(true);
+          isAudioPlaying = true;
+        }, 1000);
+      }
     }
   }, [currentTrackIndex, currentTrack]);
   
@@ -159,56 +221,98 @@ const MusicPlayer: React.FC = () => {
   
   // Play current track
   const playTrack = () => {
-      if (isSpotifyTrack) {
-        setIsPlaying(true);
-        isAudioPlaying = true;
-        // Try to interact with Spotify iframe to autoplay
-        if (iframeRef.current) {
-          try {
-            // This is a hack - we can't directly control the Spotify iframe
-            // but we can try to simulate a click on its play button
-            const spotifyFrame = iframeRef.current as any;
-            if (spotifyFrame.contentDocument) {
-              const playButton = spotifyFrame.contentDocument.querySelector('[data-testid="play-button"]');
-              if (playButton) playButton.click();
-            }
-          } catch (error) {
-            console.log('Cannot interact with Spotify iframe due to security restrictions');
+    if (isSpotifyTrack) {
+      setIsPlaying(true);
+      isAudioPlaying = true;
+      // Try to interact with Spotify iframe to autoplay
+      if (iframeRef.current) {
+        try {
+          // This is a hack - we can't directly control the Spotify iframe
+          // but we can try to simulate a click on its play button
+          const spotifyFrame = iframeRef.current as any;
+          if (spotifyFrame.contentDocument) {
+            const playButton = spotifyFrame.contentDocument.querySelector('[data-testid="play-button"]');
+            if (playButton) playButton.click();
           }
+        } catch (error) {
+          console.log('Cannot interact with Spotify iframe due to security restrictions');
         }
-        return;
       }
       
-      if (audioRef.current) {
-        const playPromise = audioRef.current.play();
-        
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              setIsPlaying(true);
-              isAudioPlaying = true;
-            })
-            .catch(error => {
-              console.error("Error playing audio:", error);
-              toast.error("Couldn't play audio. Please try another track.");
+      // Start checking for track completion
+      startSpotifyEndCheck();
+      
+      return;
+    }
+    
+    if (audioRef.current) {
+      const playPromise = audioRef.current.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true);
+            isAudioPlaying = true;
+            // Reset error count on successful play
+            errorCount = 0;
+          })
+          .catch(error => {
+            console.error("Error playing audio:", error);
+            errorCount++;
+            
+            if (errorCount < 3) {
+              // Try again after a short delay
+              setTimeout(() => playTrack(), 1000);
+            } else {
+              toast.error("Couldn't play audio. Moving to next track.");
               setIsPlaying(false);
               isAudioPlaying = false;
-              
-              // If autoplay is blocked, try to play on next user interaction
-              const resumePlayback = () => {
-                audioRef.current.play()
-                  .then(() => {
-                    setIsPlaying(true);
-                    isAudioPlaying = true;
-                  })
-                  .catch(e => console.error("Still failed to play:", e));
-                document.removeEventListener('click', resumePlayback);
-              };
-              document.addEventListener('click', resumePlayback, { once: true });
-            });
-        }
+              nextTrack(); // Skip to next track after multiple failures
+            }
+            
+            // If autoplay is blocked, try to play on next user interaction
+            const resumePlayback = () => {
+              audioRef.current.play()
+                .then(() => {
+                  setIsPlaying(true);
+                  isAudioPlaying = true;
+                })
+                .catch(e => console.error("Still failed to play:", e));
+              document.removeEventListener('click', resumePlayback);
+            };
+            document.addEventListener('click', resumePlayback, { once: true });
+          });
       }
-    };
+    }
+  };
+  
+  // Set up Spotify track end checking
+  const startSpotifyEndCheck = () => {
+    // Clear any existing timer
+    if (songEndTimerRef.current) {
+      window.clearInterval(songEndTimerRef.current);
+    }
+    
+    // For Spotify tracks, we can't detect when they end
+    // So we estimate based on the track duration and set a timer
+    if (isSpotifyTrack && currentTrack) {
+      console.log(`Setting up auto-advance for Spotify track: ${currentTrack.title}`);
+      
+      // Parse the duration string (e.g., "3:45") into seconds
+      const durationParts = currentTrack.duration.split(':');
+      const durationInSeconds = parseInt(durationParts[0]) * 60 + parseInt(durationParts[1]);
+      
+      // Set a timer to advance to the next track after the duration (plus a small buffer)
+      if (!isNaN(durationInSeconds) && durationInSeconds > 0) {
+        console.log(`Track duration: ${durationInSeconds} seconds, setting timer for auto-advance`);
+        
+        songEndTimerRef.current = window.setTimeout(() => {
+          console.log('Spotify track timer ended, advancing to next track');
+          nextTrack();
+        }, (durationInSeconds + 1) * 1000); // Add 1 second buffer
+      }
+    }
+  };
   
   // Handle audio errors
   function handleAudioError(e: ErrorEvent) {
@@ -227,6 +331,11 @@ const MusicPlayer: React.FC = () => {
       setCurrentTime(audioRef.current.currentTime);
       // Update the lastPlayedPosition as well
       lastPlayedPosition = audioRef.current.currentTime;
+      
+      // For Spotify tracks, we use this to detect when a track might have ended
+      if (isSpotifyTrack) {
+        lastProgressCheck = Date.now();
+      }
     }
   }
   
@@ -239,6 +348,7 @@ const MusicPlayer: React.FC = () => {
   
   // Handle track ended event
   function handleTrackEnded() {
+    console.log('Track ended event triggered, advancing to next track');
     // Automatically play the next song when the current one finishes
     nextTrack();
     // Since we've updated the current track index, the useEffect will trigger
@@ -260,6 +370,16 @@ const MusicPlayer: React.FC = () => {
       const newPlayingState = !isPlaying;
       setIsPlaying(newPlayingState);
       isAudioPlaying = newPlayingState;
+      
+      if (newPlayingState) {
+        // If we're starting to play, reset the Spotify end check
+        startSpotifyEndCheck();
+      } else if (songEndTimerRef.current) {
+        // If we're pausing, clear the timer
+        clearTimeout(songEndTimerRef.current);
+        songEndTimerRef.current = null;
+      }
+      
       toast.info(newPlayingState ? `Playing ${currentTrack.title} on Spotify` : 'Paused Spotify track');
       return;
     }
@@ -277,6 +397,14 @@ const MusicPlayer: React.FC = () => {
   
   // Next track
   function nextTrack() {
+    console.log('Moving to next track');
+    
+    // Clear any existing Spotify end check timer
+    if (songEndTimerRef.current) {
+      clearTimeout(songEndTimerRef.current);
+      songEndTimerRef.current = null;
+    }
+    
     const newIndex = (currentTrackIndex + 1) % songsData.length;
     setCurrentTrackIndex(newIndex);
     
@@ -286,6 +414,12 @@ const MusicPlayer: React.FC = () => {
   
   // Previous track
   function previousTrack() {
+    // Clear any existing Spotify end check timer
+    if (songEndTimerRef.current) {
+      clearTimeout(songEndTimerRef.current);
+      songEndTimerRef.current = null;
+    }
+    
     const newIndex = (currentTrackIndex - 1 + songsData.length) % songsData.length;
     setCurrentTrackIndex(newIndex);
     

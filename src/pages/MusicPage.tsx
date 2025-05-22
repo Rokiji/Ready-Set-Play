@@ -94,22 +94,13 @@ const MusicPage = () => {
                     <td className="py-4 px-6 text-white/90 hidden sm:table-cell">{song.duration}</td>
                     <td className="py-4 px-6">
                       <div className="flex gap-2">
-                        {/* Remove Play button */}
-                        {/* <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="h-8 w-8 hover:bg-violet-700/30 text-white/90 hover:text-white"
-                          onClick={() => handlePlaySong(song.id)}
-                        >
-                          <Play size={16} />
-                        </Button> */}
                         <Button 
                           size="icon" 
                           variant="ghost" 
                           className="h-8 w-8 hover:bg-violet-700/30 text-white/90 hover:text-white"
                           onClick={() => handlePlaySong(song.id)}
                         >
-                          <Plus size={16} />
+                          <Play size={16} />
                         </Button>
                       </div>
                     </td>

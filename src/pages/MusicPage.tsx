@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -13,12 +12,25 @@ const MusicPage = () => {
   const handlePlaySong = (songId: string) => {
     // Find index of song in songsData
     const songIndex = songsData.findIndex(song => song.id === songId);
-    
+
     // Store selected song index in localStorage to be used by MusicPlayer
     if (songIndex !== -1) {
       localStorage.setItem('current_song_index', songIndex.toString());
-      // Dispatch a custom event for MusicPlayer to pick up
+      // Dispatch a custom event for MusicPlayer to pick up, with autoplay true
       window.dispatchEvent(new CustomEvent('play-song', { detail: { songIndex, autoplay: true } }));
+
+      // Attempt to play the static audio element directly (used by MusicPlayer)
+      // This works only if the audio element is globally accessible
+      setTimeout(() => {
+        const audios = document.getElementsByTagName('audio');
+        if (audios.length > 0) {
+          try {
+            audios[0].currentTime = 0;
+            audios[0].play().catch(() => {});
+          } catch {}
+        }
+      }, 100);
+
       toast(`Now playing ${songsData[songIndex].title}`, {
         description: `by ${songsData[songIndex].artist}`
       });
@@ -82,18 +94,20 @@ const MusicPage = () => {
                     <td className="py-4 px-6 text-white/90 hidden sm:table-cell">{song.duration}</td>
                     <td className="py-4 px-6">
                       <div className="flex gap-2">
-                        <Button 
+                        {/* Remove Play button */}
+                        {/* <Button 
                           size="icon" 
                           variant="ghost" 
                           className="h-8 w-8 hover:bg-violet-700/30 text-white/90 hover:text-white"
                           onClick={() => handlePlaySong(song.id)}
                         >
                           <Play size={16} />
-                        </Button>
+                        </Button> */}
                         <Button 
                           size="icon" 
                           variant="ghost" 
                           className="h-8 w-8 hover:bg-violet-700/30 text-white/90 hover:text-white"
+                          onClick={() => handlePlaySong(song.id)}
                         >
                           <Plus size={16} />
                         </Button>

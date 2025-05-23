@@ -52,16 +52,11 @@ const MusicPage = () => {
             </div>
           </div>
         </div>
-        <div className="bg-violet-900/30 rounded-xl p-8 border border-violet-800/30">
+        <div className="bg-violet-900/30 rounded-xl p-8 border border-violet-800/30 my-10 flex flex-col justify-center items-center min-h-[220px]">
           <h2 className="text-2xl font-bold mb-4 text-center text-white">Create Your Perfect Playlist</h2>
-          <p className="text-center text-white/90 mb-6">
-            Want to add your own music? Upload your tracks to personalize your gaming experience.
+          <p className="text-center text-white/90">
+            Curate a playlist that matches your vibe. Add your favorite tracks and set the mood for every gaming session.
           </p>
-          <div className="flex justify-center">
-            <Button className="bg-violet-600 hover:bg-violet-700 text-white">
-              <Upload className="mr-2 h-4 w-4" /> Upload Your Music
-            </Button>
-          </div>
         </div>
       </main>
     </div>

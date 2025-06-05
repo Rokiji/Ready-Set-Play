@@ -404,14 +404,15 @@ const Navbar: React.FC = () => {
             >
               <X size={32} />
             </button>
-            <nav className="flex flex-col gap-8 text-2xl items-center">
+            <nav className="flex flex-col gap-8 text-2xl items-center mb-8">
               <Link to="/" onClick={() => setMobileMenuOpen(false)} className="hover:text-game-secondary transition-colors">Home</Link>
               <Link to="/games" onClick={e => { requireLogin(e, 'games'); setMobileMenuOpen(false); }} className="hover:text-game-secondary transition-colors">Games</Link>
               <Link to="/music" onClick={e => { requireLogin(e, 'music'); setMobileMenuOpen(false); }} className="hover:text-game-secondary transition-colors">Music</Link>
               <Link to="/leaderboard" onClick={e => { requireLogin(e, 'leaderboard'); setMobileMenuOpen(false); }} className="hover:text-game-secondary transition-colors">Leaderboard</Link>
               <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="hover:text-game-secondary transition-colors">About</Link>
             </nav>
-            <div className="flex flex-col gap-4 mt-12 w-full items-center">
+            <div className="w-4/5 h-px bg-gray-600 mb-8" />
+            <div className="flex flex-col gap-4 w-full items-center">
               {!isLoggedIn && (
                 <div className="flex flex-col items-center w-full gap-2 mb-2">
                   <div className="w-48 flex justify-center">
